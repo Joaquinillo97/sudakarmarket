@@ -179,13 +179,82 @@ const CardsPage = () => {
   const handleApplyFilters = (filters: any) => {
     setIsLoading(true);
     
-    // Simulate API call
+    // Simulate API call with setTimeout
     setTimeout(() => {
-      // Filter logic would go here in a real app
-      // For now, just return all cards
-      setFilteredCards(mockCards);
+      // Apply actual filtering logic
+      const filtered = mockCards.filter(card => {
+        // Filter by name (case insensitive text search)
+        if (filters.name && !card.name.toLowerCase().includes(filters.name.toLowerCase())) {
+          return false;
+        }
+        
+        // Filter by set
+        if (filters.set && filters.set !== "all") {
+          // Convert set name from filter format (modern_horizons_3) to display format (Modern Horizons 3)
+          const formattedSetName = filters.set
+            .split('_')
+            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+            
+          if (!card.set.includes(formattedSetName)) {
+            return false;
+          }
+        }
+        
+        // Filter by color
+        if (filters.color && filters.color !== "all") {
+          if (card.color !== filters.color) {
+            return false;
+          }
+        }
+        
+        // Filter by price range
+        const cardPrice = card.price;
+        if (cardPrice < filters.priceRange[0] || cardPrice > filters.priceRange[1]) {
+          return false;
+        }
+        
+        // Filter by condition
+        if (filters.condition && filters.condition !== "all") {
+          // Convert condition from filter format (near_mint) to display format (Near Mint)
+          const formattedCondition = filters.condition
+            .split('_')
+            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+            
+          if (card.condition !== formattedCondition) {
+            return false;
+          }
+        }
+        
+        // Filter by language
+        if (filters.language && filters.language !== "all") {
+          // Map language codes to display names
+          const languageMap: Record<string, string> = {
+            'es': 'Español',
+            'en': 'Inglés',
+            'pt': 'Portugués',
+            'ja': 'Japonés',
+            'de': 'Alemán',
+            'fr': 'Francés',
+            'it': 'Italiano',
+            'ko': 'Coreano',
+            'ru': 'Ruso',
+            'zh': 'Chino Simplificado'
+          };
+          
+          if (card.language !== languageMap[filters.language]) {
+            return false;
+          }
+        }
+        
+        // If all filters pass, include the card
+        return true;
+      });
+      
+      setFilteredCards(filtered);
       setIsLoading(false);
-    }, 500);
+    }, 500); // Half second delay to simulate API call
   };
 
   return (
@@ -240,6 +309,26 @@ const CardsPage = () => {
           {/* Card Grid */}
           <div>
             <CardGrid cards={filteredCards} isLoading={isLoading} />
+            {filteredCards.length === 0 && !isLoading && (
+              <div className="text-center py-8">
+                <p className="text-lg text-muted-foreground">No se encontraron cartas que coincidan con los filtros seleccionados.</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => handleApplyFilters({
+                    name: "",
+                    set: "",
+                    color: "",
+                    rarity: "",
+                    priceRange: [0, 100000],
+                    condition: "",
+                    language: ""
+                  })}
+                >
+                  Limpiar filtros
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </main>
