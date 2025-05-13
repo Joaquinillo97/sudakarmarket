@@ -66,7 +66,7 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
             <SelectValue placeholder="Edición" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
             <SelectItem value="modern_horizons_3">Modern Horizons 3</SelectItem>
             <SelectItem value="outlaws_of_thunder_junction">Outlaws of Thunder Junction</SelectItem>
             <SelectItem value="murders_at_karlov_manor">Murders at Karlov Manor</SelectItem>
@@ -83,7 +83,7 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
             <SelectValue placeholder="Color" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="white">Blanco</SelectItem>
             <SelectItem value="blue">Azul</SelectItem>
             <SelectItem value="black">Negro</SelectItem>
@@ -121,7 +121,7 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
                 <SelectValue placeholder="Rareza" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas</SelectItem>
+                <SelectItem value="all">Todas</SelectItem>
                 <SelectItem value="common">Común</SelectItem>
                 <SelectItem value="uncommon">Infrecuente</SelectItem>
                 <SelectItem value="rare">Rara</SelectItem>
@@ -137,7 +137,7 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="mint">Mint (M)</SelectItem>
                 <SelectItem value="near_mint">Near Mint (NM)</SelectItem>
                 <SelectItem value="excellent">Excellent (EX)</SelectItem>
@@ -156,7 +156,7 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
                 <SelectValue placeholder="Idioma" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="es">Español</SelectItem>
                 <SelectItem value="en">Inglés</SelectItem>
                 <SelectItem value="pt">Portugués</SelectItem>
