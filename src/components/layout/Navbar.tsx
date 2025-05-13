@@ -46,6 +46,9 @@ const Navbar = () => {
             <Link to="/sellers" className="text-sm font-medium hover:underline">
               Vendedores
             </Link>
+            <Link to="/collection" className="text-sm font-medium hover:underline">
+              Mi Colección
+            </Link>
             <Link to="/wishlist" className="text-sm font-medium hover:underline">
               Wishlist
             </Link>
@@ -78,7 +81,7 @@ const Navbar = () => {
                 <Link to="/profile" className="w-full">Perfil</Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Link to="/inventory" className="w-full">Mi inventario</Link>
+                <Link to="/collection" className="w-full">Mi colección</Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Link to="/wishlist" className="w-full">Mi wishlist</Link>
@@ -117,6 +120,13 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               Vendedores
+            </Link>
+            <Link 
+              to="/collection" 
+              className="px-2 py-1.5 text-sm font-medium rounded-md hover:bg-secondary"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Mi Colección
             </Link>
             <Link 
               to="/wishlist" 

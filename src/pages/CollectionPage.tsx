@@ -8,6 +8,8 @@ import ManualCardEntry from "@/components/collection/ManualCardEntry";
 import BulkImport from "@/components/collection/BulkImport";
 import CollectionView from "@/components/collection/CollectionView";
 import PageHeader from "@/components/layout/PageHeader";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 import { PlusCircle, FileUp } from "lucide-react";
 
 const CollectionPage = () => {
@@ -36,56 +38,60 @@ const CollectionPage = () => {
   };
 
   return (
-    <div className="container px-4 py-6 md:py-8 max-w-7xl mx-auto">
-      <PageHeader
-        title="Mi Colección"
-        description="Gestiona tus cartas y publícalas para venta o intercambio"
-      />
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <div className="container px-4 py-6 md:py-8 max-w-7xl mx-auto flex-1">
+        <PageHeader
+          title="Mi Colección"
+          description="Gestiona tus cartas y publícalas para venta o intercambio"
+        />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-        <div className="flex items-center justify-between mb-4">
-          <TabsList>
-            <TabsTrigger value="view">Ver Colección</TabsTrigger>
-            <TabsTrigger value="add">Agregar Carta</TabsTrigger>
-            <TabsTrigger value="import">Importar Bulk</TabsTrigger>
-          </TabsList>
-          
-          {activeTab === "view" && (
-            <div className="flex gap-2">
-              <Button 
-                variant="default" 
-                size={isMobile ? "sm" : "default"}
-                onClick={() => setActiveTab("add")}
-                className="whitespace-nowrap"
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                {isMobile ? "Cargar" : "Cargar carta"}
-              </Button>
-              <Button 
-                variant="outline" 
-                size={isMobile ? "sm" : "default"}
-                onClick={() => setActiveTab("import")}
-                className="whitespace-nowrap"
-              >
-                <FileUp className="mr-2 h-4 w-4" />
-                {isMobile ? "Importar" : "Importar bulk"}
-              </Button>
-            </div>
-          )}
-        </div>
-    
-        <TabsContent value="view" className="mt-0">
-          <CollectionView />
-        </TabsContent>
-    
-        <TabsContent value="add" className="mt-0">
-          <ManualCardEntry onSuccess={handleCardAddSuccess} />
-        </TabsContent>
-    
-        <TabsContent value="import" className="mt-0">
-          <BulkImport onSuccess={handleBulkImportSuccess} />
-        </TabsContent>
-      </Tabs>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <TabsList>
+              <TabsTrigger value="view">Ver Colección</TabsTrigger>
+              <TabsTrigger value="add">Agregar Carta</TabsTrigger>
+              <TabsTrigger value="import">Importar Bulk</TabsTrigger>
+            </TabsList>
+            
+            {activeTab === "view" && (
+              <div className="flex gap-2">
+                <Button 
+                  variant="default" 
+                  size={isMobile ? "sm" : "default"}
+                  onClick={() => setActiveTab("add")}
+                  className="whitespace-nowrap"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  {isMobile ? "Cargar" : "Cargar carta"}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size={isMobile ? "sm" : "default"}
+                  onClick={() => setActiveTab("import")}
+                  className="whitespace-nowrap"
+                >
+                  <FileUp className="mr-2 h-4 w-4" />
+                  {isMobile ? "Importar" : "Importar bulk"}
+                </Button>
+              </div>
+            )}
+          </div>
+      
+          <TabsContent value="view" className="mt-0">
+            <CollectionView />
+          </TabsContent>
+      
+          <TabsContent value="add" className="mt-0">
+            <ManualCardEntry onSuccess={handleCardAddSuccess} />
+          </TabsContent>
+      
+          <TabsContent value="import" className="mt-0">
+            <BulkImport onSuccess={handleBulkImportSuccess} />
+          </TabsContent>
+        </Tabs>
+      </div>
+      <Footer />
     </div>
   );
 };
