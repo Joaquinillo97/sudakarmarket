@@ -14,6 +14,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
 import { Heart } from "lucide-react";
 
 interface CardItemProps {
@@ -44,9 +45,26 @@ const CardItem = ({
   color = "colorless"
 }: CardItemProps) => {
   const [isLiked, setIsLiked] = useState(false);
+  const { toast } = useToast();
 
   // Decide which color class to apply
   const colorClass = `mtg-${color.toLowerCase()}`;
+
+  const handleWishlistToggle = () => {
+    setIsLiked(prev => !prev);
+    
+    // Show toast notification
+    toast({
+      title: isLiked ? "Quitada de wishlist" : "¡Agregada a wishlist!",
+      description: isLiked 
+        ? `${name} fue quitada de tu wishlist` 
+        : `${name} fue agregada a tu wishlist`,
+      duration: 3000,
+    });
+
+    // In a real app, this is where we would call an API to update the user's wishlist
+    console.log(`Card ${id} ${isLiked ? 'removed from' : 'added to'} wishlist`);
+  };
 
   return (
     <Card className={`mtg-card overflow-hidden h-full`}>
@@ -66,7 +84,7 @@ const CardItem = ({
                   variant="ghost" 
                   size="icon" 
                   className="h-7 w-7" 
-                  onClick={() => setIsLiked(prev => !prev)}
+                  onClick={handleWishlistToggle}
                 >
                   <Heart 
                     className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`} 
@@ -74,7 +92,7 @@ const CardItem = ({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {isLiked ? "Quitar de wishlist" : "Añadir a wishlist"}
+                {isLiked ? "Quitar de wishlist" : "¡Agregar a wishlist!"}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

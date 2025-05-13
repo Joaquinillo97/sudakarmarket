@@ -50,7 +50,7 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Buscar por nombre de carta..."
+          placeholder="¡Buscá tu carta!"
           className="pl-8"
           value={filters.name}
           onChange={(e) => handleFilterChange("name", e.target.value)}
@@ -173,8 +173,8 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
         </AccordionItem>
       </Accordion>
 
-      <Button type="submit" className="w-full">
-        Aplicar filtros
+      <Button type="submit" className="w-full bg-gradient-to-r from-mtg-blue via-mtg-red to-mtg-green text-white hover:opacity-90">
+        ¡Encontrar cartas!
       </Button>
     </form>
   );
