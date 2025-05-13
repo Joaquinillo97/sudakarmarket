@@ -4,28 +4,24 @@ import { Link } from "react-router-dom";
 
 const HeroSection = () => {
   return (
-    <section className="bg-gradient-to-b from-background to-muted py-16 md:py-24">
+    <section className="bg-gradient-to-b from-background to-muted py-12 md:py-20">
       <div className="container px-4 md:px-6">
-        <div className="grid gap-6 lg:grid-cols-2 lg:gap-12">
+        <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
           <div className="flex flex-col justify-center space-y-4">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-                Bienvenido a la comunidad de{" "}
                 <span className="bg-gradient-to-r from-mtg-blue via-mtg-red to-mtg-green bg-clip-text text-transparent">
-                  Magic: The Gathering
+                  ¡Intercambiá cartas de Magic
                 </span>{" "}
-                en Argentina
+                con jugadores de toda Argentina!
               </h1>
-              <p className="text-muted-foreground md:text-xl">
-                Intercambia, vende y compra cartas directamente con otros jugadores de Mendoza y toda Argentina.
-              </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button size="lg" asChild>
-                <Link to="/cards">Explorar cartas disponibles</Link>
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <Button size="lg" asChild className="text-lg">
+                <Link to="/cards">¡Buscá tu carta!</Link>
               </Button>
-              <Button variant="outline" size="lg" asChild>
-                <Link to="/register">Registrarme</Link>
+              <Button variant="outline" size="lg" asChild className="text-lg">
+                <Link to="/import">¡Importá tu colección!</Link>
               </Button>
             </div>
           </div>

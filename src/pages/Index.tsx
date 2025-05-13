@@ -1,10 +1,9 @@
 
 import HeroSection from "@/components/home/HeroSection";
-import StatsSection from "@/components/home/StatsSection";
-import FeaturesSection from "@/components/home/FeaturesSection";
 import CTASection from "@/components/home/CTASection";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import ActionBanners from "@/components/home/ActionBanners";
 
 const Index = () => {
   return (
@@ -12,8 +11,7 @@ const Index = () => {
       <Navbar />
       <main className="flex-1">
         <HeroSection />
-        <StatsSection />
-        <FeaturesSection />
+        <ActionBanners />
         <CTASection />
       </main>
       <Footer />
