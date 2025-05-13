@@ -31,9 +31,9 @@ const HeroSection = () => {
               <div className="absolute -right-4 top-6 h-72 w-56 -rotate-6 transform rounded-2xl bg-mtg-red opacity-40"></div>
               <div className="relative h-72 w-56 overflow-hidden rounded-2xl shadow-lg">
                 <img
-                  alt="Magic Card"
+                  alt="Black Lotus"
                   className="h-full w-full object-cover"
-                  src="https://cards.scryfall.io/art_crop/front/a/5/a5356b11-e505-4838-aecb-327689eeead1.jpg"
+                  src="https://cards.scryfall.io/art_crop/front/b/a/ba953c32-8eb1-409a-9b7a-a2054b139068.jpg"
                 />
               </div>
             </div>
