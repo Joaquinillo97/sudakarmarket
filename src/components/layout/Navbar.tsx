@@ -33,7 +33,7 @@ const Navbar = () => {
           )}
           <Link to="/" className="flex items-center gap-2">
             <span className="font-bold text-xl bg-gradient-to-r from-mtg-blue via-mtg-red to-mtg-green bg-clip-text text-transparent">
-              MTG Argentina
+              Sudakarmarket
             </span>
           </Link>
         </div>
@@ -46,11 +46,11 @@ const Navbar = () => {
             <Link to="/sellers" className="text-sm font-medium hover:underline">
               Vendedores
             </Link>
-            <Link to="/wishlists" className="text-sm font-medium hover:underline">
-              Wishlists
+            <Link to="/wishlist" className="text-sm font-medium hover:underline">
+              Wishlist
             </Link>
-            <Link to="/import" className="text-sm font-medium hover:underline">
-              Importar
+            <Link to="/profile" className="text-sm font-medium hover:underline">
+              Mi Perfil
             </Link>
           </div>
         )}
@@ -119,18 +119,18 @@ const Navbar = () => {
               Vendedores
             </Link>
             <Link 
-              to="/wishlists" 
+              to="/wishlist" 
               className="px-2 py-1.5 text-sm font-medium rounded-md hover:bg-secondary"
               onClick={() => setIsMenuOpen(false)}
             >
-              Wishlists
+              Wishlist
             </Link>
             <Link 
-              to="/import" 
+              to="/profile" 
               className="px-2 py-1.5 text-sm font-medium rounded-md hover:bg-secondary"
               onClick={() => setIsMenuOpen(false)}
             >
-              Importar
+              Mi Perfil
             </Link>
           </div>
         </div>

@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Import, Search, Heart, User } from "lucide-react";
+import { User, Search, Heart, Coffee } from "lucide-react";
 
 const ActionBanners = () => {
   const actions = [
@@ -27,10 +27,10 @@ const ActionBanners = () => {
       bgColor: "bg-gradient-to-r from-mtg-red to-mtg-blue"
     },
     {
-      title: "¡Importá tu colección desde Moxfield!",
-      icon: <Import className="h-8 w-8" />,
-      link: "/import",
-      buttonText: "Importar mazos",
+      title: "¡Ayudanos a mantener la comunidad!",
+      icon: <Coffee className="h-8 w-8" />,
+      link: "/donate",
+      buttonText: "Hacer una donación",
       bgColor: "bg-gradient-to-r from-mtg-blue to-mtg-red"
     }
   ];

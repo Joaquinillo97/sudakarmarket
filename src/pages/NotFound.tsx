@@ -10,7 +10,7 @@ const NotFound = () => {
         <h2 className="text-2xl font-semibold">Página no encontrada</h2>
         <p className="text-muted-foreground max-w-lg">
           La página que estás buscando no existe o fue removida.
-          Probablemente te perdiste en el multiverso de Magic.
+          Probablemente te perdiste en el multiverso de Magic de Sudakarmarket.
         </p>
         <Button asChild>
           <Link to="/">Volver al inicio</Link>
