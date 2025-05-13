@@ -21,7 +21,7 @@ const HeroSection = () => {
                 <Link to="/cards">¡Buscá tu carta!</Link>
               </Button>
               <Button variant="outline" size="lg" asChild className="text-lg">
-                <Link to="/import">¡Importá tu colección!</Link>
+                <Link to="/collection">¡Importá tu colección!</Link>
               </Button>
             </div>
           </div>
