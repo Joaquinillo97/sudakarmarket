@@ -22,6 +22,7 @@ export default {
 			fontFamily: {
 				sans: ['DM Sans', 'Inter', 'sans-serif'],
 				heading: ['Poppins', 'sans-serif'],
+				magic: ['Cinzel', 'serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -65,7 +66,8 @@ export default {
 					red: '#D3202A',
 					green: '#00733D',
 					colorless: '#BFBDBD',
-					gold: '#D9A74A'
+					gold: '#D9A74A',
+					orange: '#E25822'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',

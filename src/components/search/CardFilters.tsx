@@ -173,7 +173,7 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
         </AccordionItem>
       </Accordion>
 
-      <Button type="submit" className="w-full bg-gradient-to-r from-mtg-blue via-mtg-red to-mtg-green text-white hover:opacity-90">
+      <Button type="submit" className="w-full bg-mtg-orange text-white font-magic">
         ¡Encontrar cartas!
       </Button>
     </form>

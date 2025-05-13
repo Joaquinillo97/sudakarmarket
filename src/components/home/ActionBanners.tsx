@@ -10,28 +10,28 @@ const ActionBanners = () => {
       icon: <User className="h-8 w-8" />,
       link: "/collection",
       buttonText: "Cargar mis cartas",
-      bgColor: "bg-gradient-to-r from-mtg-blue to-mtg-green"
+      bgClass: "bg-mtg-orange"
     },
     {
       title: "¡Buscá y filtrá miles de cartas disponibles!",
       icon: <Search className="h-8 w-8" />,
       link: "/cards",
       buttonText: "Explorar cartas",
-      bgColor: "bg-gradient-to-r from-mtg-green to-mtg-red"
+      bgClass: "bg-mtg-orange"
     },
     {
       title: "¡Agregá cartas a tu wishlist y hacé match!",
       icon: <Heart className="h-8 w-8" />,
       link: "/wishlist",
       buttonText: "Mi wishlist",
-      bgColor: "bg-gradient-to-r from-mtg-red to-mtg-blue"
+      bgClass: "bg-mtg-orange"
     },
     {
       title: "¡Ayudanos a mantener la comunidad!",
       icon: <Coffee className="h-8 w-8" />,
       link: "/donate",
       buttonText: "Hacer una donación",
-      bgColor: "bg-gradient-to-r from-mtg-blue to-mtg-red"
+      bgClass: "bg-mtg-orange"
     }
   ];
 
@@ -42,13 +42,13 @@ const ActionBanners = () => {
           {actions.map((action, index) => (
             <div 
               key={index} 
-              className={`rounded-xl p-6 text-white shadow-lg ${action.bgColor} hover:opacity-95 transition-opacity`}
+              className={`rounded-xl p-6 text-white shadow-lg ${action.bgClass} hover:opacity-95 transition-opacity`}
             >
               <div className="flex items-center gap-4">
                 <div className="p-2 bg-white/20 rounded-full">
                   {action.icon}
                 </div>
-                <h3 className="text-xl font-bold">{action.title}</h3>
+                <h3 className="text-xl font-magic">{action.title}</h3>
               </div>
               
               <div className="mt-4 text-right">
@@ -56,7 +56,7 @@ const ActionBanners = () => {
                   variant="secondary" 
                   size="lg"
                   asChild
-                  className="font-bold text-black bg-white hover:bg-white/90"
+                  className="font-magic text-white bg-black/30 hover:bg-black/40"
                 >
                   <Link to={action.link}>{action.buttonText}</Link>
                 </Button>

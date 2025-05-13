@@ -9,18 +9,18 @@ const HeroSection = () => {
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
           <div className="flex flex-col justify-center space-y-4">
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-                <span className="bg-gradient-to-r from-mtg-blue via-mtg-red to-mtg-green bg-clip-text text-transparent">
+              <h1 className="text-3xl font-magic tracking-tight sm:text-4xl md:text-5xl text-white">
+                <span className="text-mtg-orange">
                   ¡Intercambiá cartas de Magic
                 </span>{" "}
                 con jugadores de toda Argentina!
               </h1>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <Button size="lg" asChild className="text-lg">
+              <Button size="lg" asChild className="text-lg font-magic">
                 <Link to="/cards">¡Buscá tu carta!</Link>
               </Button>
-              <Button variant="outline" size="lg" asChild className="text-lg">
+              <Button variant="outline" size="lg" asChild className="text-lg font-magic">
                 <Link to="/collection">¡Importá tu colección!</Link>
               </Button>
             </div>

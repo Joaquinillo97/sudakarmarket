@@ -32,7 +32,7 @@ const Navbar = () => {
             </Button>
           )}
           <Link to="/" className="flex items-center gap-2">
-            <span className="font-bold text-xl bg-gradient-to-r from-mtg-blue via-mtg-red to-mtg-green bg-clip-text text-transparent">
+            <span className="font-magic text-xl text-white">
               Sudakarmarket
             </span>
           </Link>
@@ -40,19 +40,19 @@ const Navbar = () => {
 
         {!isMobile && (
           <div className="hidden md:flex items-center gap-6">
-            <Link to="/cards" className="text-sm font-medium hover:underline">
+            <Link to="/cards" className="text-sm font-magic hover:text-mtg-orange transition-colors">
               Cartas
             </Link>
-            <Link to="/sellers" className="text-sm font-medium hover:underline">
+            <Link to="/sellers" className="text-sm font-magic hover:text-mtg-orange transition-colors">
               Vendedores
             </Link>
-            <Link to="/collection" className="text-sm font-medium hover:underline">
+            <Link to="/collection" className="text-sm font-magic hover:text-mtg-orange transition-colors">
               Mi Colección
             </Link>
-            <Link to="/wishlist" className="text-sm font-medium hover:underline">
+            <Link to="/wishlist" className="text-sm font-magic hover:text-mtg-orange transition-colors">
               Wishlist
             </Link>
-            <Link to="/profile" className="text-sm font-medium hover:underline">
+            <Link to="/profile" className="text-sm font-magic hover:text-mtg-orange transition-colors">
               Mi Perfil
             </Link>
           </div>
@@ -109,35 +109,35 @@ const Navbar = () => {
           <div className="flex flex-col space-y-2">
             <Link 
               to="/cards" 
-              className="px-2 py-1.5 text-sm font-medium rounded-md hover:bg-secondary"
+              className="px-2 py-1.5 text-sm font-magic rounded-md hover:bg-secondary"
               onClick={() => setIsMenuOpen(false)}
             >
               Cartas
             </Link>
             <Link 
               to="/sellers" 
-              className="px-2 py-1.5 text-sm font-medium rounded-md hover:bg-secondary"
+              className="px-2 py-1.5 text-sm font-magic rounded-md hover:bg-secondary"
               onClick={() => setIsMenuOpen(false)}
             >
               Vendedores
             </Link>
             <Link 
               to="/collection" 
-              className="px-2 py-1.5 text-sm font-medium rounded-md hover:bg-secondary"
+              className="px-2 py-1.5 text-sm font-magic rounded-md hover:bg-secondary"
               onClick={() => setIsMenuOpen(false)}
             >
               Mi Colección
             </Link>
             <Link 
               to="/wishlist" 
-              className="px-2 py-1.5 text-sm font-medium rounded-md hover:bg-secondary"
+              className="px-2 py-1.5 text-sm font-magic rounded-md hover:bg-secondary"
               onClick={() => setIsMenuOpen(false)}
             >
               Wishlist
             </Link>
             <Link 
               to="/profile" 
-              className="px-2 py-1.5 text-sm font-medium rounded-md hover:bg-secondary"
+              className="px-2 py-1.5 text-sm font-magic rounded-md hover:bg-secondary"
               onClick={() => setIsMenuOpen(false)}
             >
               Mi Perfil
