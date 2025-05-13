@@ -27,12 +27,12 @@ interface CardFiltersProps {
 const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
   const [filters, setFilters] = useState({
     name: "",
-    set: "",
-    color: "",
-    rarity: "",
+    set: "all",
+    color: "all",
+    rarity: "all",
     priceRange: [0, 100000],
-    condition: "",
-    language: "",
+    condition: "all",
+    language: "all",
   });
 
   const handleFilterChange = (key: string, value: any) => {
@@ -67,11 +67,13 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
-            <SelectItem value="modern_horizons_3">Modern Horizons 3</SelectItem>
-            <SelectItem value="outlaws_of_thunder_junction">Outlaws of Thunder Junction</SelectItem>
-            <SelectItem value="murders_at_karlov_manor">Murders at Karlov Manor</SelectItem>
-            <SelectItem value="lost_caverns_of_ixalan">Lost Caverns of Ixalan</SelectItem>
-            <SelectItem value="wilds_of_eldraine">Wilds of Eldraine</SelectItem>
+            <SelectItem value="mh3">Modern Horizons 3</SelectItem>
+            <SelectItem value="otj">Outlaws of Thunder Junction</SelectItem>
+            <SelectItem value="mkm">Murders at Karlov Manor</SelectItem>
+            <SelectItem value="lci">Lost Caverns of Ixalan</SelectItem>
+            <SelectItem value="woe">Wilds of Eldraine</SelectItem>
+            <SelectItem value="mom">March of the Machine</SelectItem>
+            <SelectItem value="one">Phyrexia: All Will Be One</SelectItem>
           </SelectContent>
         </Select>
         

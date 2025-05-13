@@ -16,246 +16,72 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-
-// Mock data
-const mockCards = [
-  {
-    id: "1",
-    name: "Ragavan, Nimble Pilferer",
-    set: "Modern Horizons 2",
-    imageUrl: "https://cards.scryfall.io/normal/front/a/9/a9738cda-adb1-47fb-9f4c-ecd930228c4d.jpg",
-    price: 50000,
-    seller: {
-      id: "seller1",
-      name: "MagicDealer",
-      rating: 4.8,
-    },
-    condition: "Near Mint",
-    language: "Inglés",
-    color: "red",
-  },
-  {
-    id: "2",
-    name: "Omnath, Locus of Creation",
-    set: "Zendikar Rising",
-    imageUrl: "https://cards.scryfall.io/normal/front/4/e/4e4fb50c-a81f-44d3-93c5-fa9a0b37f617.jpg",
-    price: 12000,
-    seller: {
-      id: "seller2",
-      name: "CardKingdom",
-      rating: 4.9,
-    },
-    condition: "Excellent",
-    language: "Inglés",
-    color: "gold",
-  },
-  {
-    id: "3",
-    name: "Wrenn and Six",
-    set: "Modern Horizons",
-    imageUrl: "https://cards.scryfall.io/normal/front/4/a/4a706ecf-3277-40e3-871c-4ba4ead16e20.jpg",
-    price: 48000,
-    seller: {
-      id: "seller3",
-      name: "MTGStore",
-      rating: 4.7,
-    },
-    condition: "Near Mint",
-    language: "Inglés",
-    color: "green",
-  },
-  {
-    id: "4",
-    name: "Teferi, Time Raveler",
-    set: "War of the Spark",
-    imageUrl: "https://cards.scryfall.io/normal/front/5/c/5cb76266-ae50-4bbc-8f96-d98f309b02d3.jpg",
-    price: 20000,
-    seller: {
-      id: "seller1",
-      name: "MagicDealer",
-      rating: 4.8,
-    },
-    condition: "Near Mint",
-    language: "Inglés",
-    color: "blue",
-  },
-  {
-    id: "5",
-    name: "Solitude",
-    set: "Modern Horizons 2",
-    imageUrl: "https://cards.scryfall.io/normal/front/4/7/47a6234f-309f-4e03-9263-66da48b57153.jpg",
-    price: 35000,
-    seller: {
-      id: "seller4",
-      name: "MTGCollector",
-      rating: 4.6,
-    },
-    condition: "Near Mint",
-    language: "Español",
-    color: "white",
-  },
-  {
-    id: "6",
-    name: "Grief",
-    set: "Modern Horizons 2",
-    imageUrl: "https://cards.scryfall.io/normal/front/e/6/e6befbc4-1320-4f26-bd9f-b1814fedda10.jpg",
-    price: 18000,
-    seller: {
-      id: "seller2",
-      name: "CardKingdom",
-      rating: 4.9,
-    },
-    condition: "Near Mint",
-    language: "Inglés",
-    color: "black",
-  },
-  {
-    id: "7",
-    name: "Urza's Saga",
-    set: "Modern Horizons 2",
-    imageUrl: "https://cards.scryfall.io/normal/front/c/1/c1e0f201-42cb-46a1-901a-65bb4fc18f6c.jpg",
-    price: 25000,
-    seller: {
-      id: "seller1",
-      name: "MagicDealer",
-      rating: 4.8,
-    },
-    condition: "Excellent",
-    language: "Inglés",
-    color: "colorless",
-  },
-  {
-    id: "8",
-    name: "Fury",
-    set: "Modern Horizons 2",
-    imageUrl: "https://cards.scryfall.io/normal/front/b/d/bd281158-8180-40b9-a5b7-03cfc712d81a.jpg",
-    price: 22000,
-    seller: {
-      id: "seller3",
-      name: "MTGStore",
-      rating: 4.7,
-    },
-    condition: "Near Mint",
-    language: "Inglés",
-    color: "red",
-  },
-  {
-    id: "9",
-    name: "Cavern of Souls",
-    set: "Avacyn Restored",
-    imageUrl: "https://cards.scryfall.io/normal/front/2/5/25976cb2-3123-4935-adcc-70e3db51d381.jpg",
-    price: 48000,
-    seller: {
-      id: "seller2",
-      name: "CardKingdom",
-      rating: 4.9,
-    },
-    condition: "Light Played",
-    language: "Inglés",
-    color: "colorless",
-  },
-  {
-    id: "10",
-    name: "Force of Negation",
-    set: "Modern Horizons",
-    imageUrl: "https://cards.scryfall.io/normal/front/e/9/e9be371c-c688-44ad-ab71-bd4c9f242d58.jpg",
-    price: 30000,
-    seller: {
-      id: "seller4",
-      name: "MTGCollector",
-      rating: 4.6,
-    },
-    condition: "Near Mint",
-    language: "Inglés",
-    color: "blue",
-  },
-];
+import { useSearchCards, buildSearchParams } from "@/hooks/use-scryfall";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { toast } from "sonner";
 
 const CardsPage = () => {
   const isMobile = useIsMobile();
-  const [filteredCards, setFilteredCards] = useState(mockCards);
-  const [isLoading, setIsLoading] = useState(false);
+  const [filters, setFilters] = useState({
+    name: "",
+    set: "all",
+    color: "all",
+    rarity: "all",
+    priceRange: [0, 100000],
+    condition: "all",
+    language: "all"
+  });
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const handleApplyFilters = (filters: any) => {
-    setIsLoading(true);
+  // Convert our filters to Scryfall search params
+  const searchParams = buildSearchParams(filters);
+  
+  // Fetch cards from Scryfall API using our custom hook
+  const { 
+    data: cardResults, 
+    isLoading, 
+    error,
+    isError
+  } = useSearchCards({ ...searchParams, page: currentPage });
+
+  // Extract cards from the result
+  const cards = cardResults?.data || [];
+  const totalCards = cardResults?.total_cards || 0;
+  const hasMore = cardResults?.has_more || false;
+
+  // Calculate total pages (Scryfall has 175 cards per page)
+  const totalPages = Math.ceil(totalCards / 175);
+
+  const handleApplyFilters = (newFilters: any) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
     
-    // Simulate API call with setTimeout
-    setTimeout(() => {
-      // Apply actual filtering logic
-      const filtered = mockCards.filter(card => {
-        // Filter by name (case insensitive text search)
-        if (filters.name && !card.name.toLowerCase().includes(filters.name.toLowerCase())) {
-          return false;
-        }
-        
-        // Filter by set
-        if (filters.set && filters.set !== "all") {
-          // Convert set name from filter format (modern_horizons_3) to display format (Modern Horizons 3)
-          const formattedSetName = filters.set
-            .split('_')
-            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
-            
-          if (!card.set.includes(formattedSetName)) {
-            return false;
-          }
-        }
-        
-        // Filter by color
-        if (filters.color && filters.color !== "all") {
-          if (card.color !== filters.color) {
-            return false;
-          }
-        }
-        
-        // Filter by price range
-        const cardPrice = card.price;
-        if (cardPrice < filters.priceRange[0] || cardPrice > filters.priceRange[1]) {
-          return false;
-        }
-        
-        // Filter by condition
-        if (filters.condition && filters.condition !== "all") {
-          // Convert condition from filter format (near_mint) to display format (Near Mint)
-          const formattedCondition = filters.condition
-            .split('_')
-            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
-            
-          if (card.condition !== formattedCondition) {
-            return false;
-          }
-        }
-        
-        // Filter by language
-        if (filters.language && filters.language !== "all") {
-          // Map language codes to display names
-          const languageMap: Record<string, string> = {
-            'es': 'Español',
-            'en': 'Inglés',
-            'pt': 'Portugués',
-            'ja': 'Japonés',
-            'de': 'Alemán',
-            'fr': 'Francés',
-            'it': 'Italiano',
-            'ko': 'Coreano',
-            'ru': 'Ruso',
-            'zh': 'Chino Simplificado'
-          };
-          
-          if (card.language !== languageMap[filters.language]) {
-            return false;
-          }
-        }
-        
-        // If all filters pass, include the card
-        return true;
-      });
-      
-      setFilteredCards(filtered);
-      setIsLoading(false);
-    }, 500); // Half second delay to simulate API call
+    // Show toast for applying filters
+    toast('Filtros aplicados', {
+      description: 'Buscando cartas con los filtros seleccionados.',
+    });
   };
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+    window.scrollTo(0, 0);
+  };
+
+  // Display error if API request fails
+  if (isError) {
+    toast.error('Error al cargar cartas', {
+      description: (error as Error).message || 'Hubo un problema al conectar con Scryfall API',
+    });
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -290,8 +116,8 @@ const CardsPage = () => {
                   <Separator className="my-4" />
                   <div className="py-4 pr-6">
                     <CardFilters 
-                      onApplyFilters={(filters) => {
-                        handleApplyFilters(filters);
+                      onApplyFilters={(newFilters) => {
+                        handleApplyFilters(newFilters);
                         document.querySelector<HTMLButtonElement>('.sheet-close-button')?.click();
                       }} 
                     />
@@ -308,8 +134,10 @@ const CardsPage = () => {
           
           {/* Card Grid */}
           <div>
-            <CardGrid cards={filteredCards} isLoading={isLoading} />
-            {filteredCards.length === 0 && !isLoading && (
+            <CardGrid cards={cards} isLoading={isLoading} />
+            
+            {/* Empty state */}
+            {cards.length === 0 && !isLoading && (
               <div className="text-center py-8">
                 <p className="text-lg text-muted-foreground">No se encontraron cartas que coincidan con los filtros seleccionados.</p>
                 <Button 
@@ -317,16 +145,137 @@ const CardsPage = () => {
                   className="mt-4"
                   onClick={() => handleApplyFilters({
                     name: "",
-                    set: "",
-                    color: "",
-                    rarity: "",
+                    set: "all",
+                    color: "all",
+                    rarity: "all",
                     priceRange: [0, 100000],
-                    condition: "",
-                    language: ""
+                    condition: "all",
+                    language: "all"
                   })}
                 >
                   Limpiar filtros
                 </Button>
+              </div>
+            )}
+            
+            {/* Pagination */}
+            {!isLoading && cards.length > 0 && totalPages > 1 && (
+              <div className="flex justify-center mt-8">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        href="#" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(currentPage - 1);
+                        }}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                    
+                    {/* First page */}
+                    <PaginationItem>
+                      <PaginationLink 
+                        href="#" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(1);
+                        }}
+                        isActive={currentPage === 1}
+                      >
+                        1
+                      </PaginationLink>
+                    </PaginationItem>
+                    
+                    {/* Ellipsis if current page > 3 */}
+                    {currentPage > 3 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                    
+                    {/* Page before current if not first or second page */}
+                    {currentPage > 2 && (
+                      <PaginationItem>
+                        <PaginationLink 
+                          href="#" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(currentPage - 1);
+                          }}
+                        >
+                          {currentPage - 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )}
+                    
+                    {/* Current page if not first page */}
+                    {currentPage !== 1 && (
+                      <PaginationItem>
+                        <PaginationLink 
+                          href="#" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(currentPage);
+                          }}
+                          isActive={true}
+                        >
+                          {currentPage}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )}
+                    
+                    {/* Next page if available and not last */}
+                    {currentPage < totalPages - 1 && (
+                      <PaginationItem>
+                        <PaginationLink 
+                          href="#" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(currentPage + 1);
+                          }}
+                        >
+                          {currentPage + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )}
+                    
+                    {/* Ellipsis if current page < totalpages - 2 */}
+                    {currentPage < totalPages - 2 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                    
+                    {/* Last page if not the first page */}
+                    {totalPages > 1 && (
+                      <PaginationItem>
+                        <PaginationLink 
+                          href="#" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(totalPages);
+                          }}
+                          isActive={currentPage === totalPages}
+                        >
+                          {totalPages}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        href="#" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(currentPage + 1);
+                        }}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             )}
           </div>
