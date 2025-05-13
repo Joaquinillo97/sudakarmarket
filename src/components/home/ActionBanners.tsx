@@ -8,7 +8,7 @@ const ActionBanners = () => {
     {
       title: "¡Publicá tu bulk y encontrá compradores!",
       icon: <User className="h-8 w-8" />,
-      link: "/inventory",
+      link: "/collection",
       buttonText: "Cargar mis cartas",
       bgColor: "bg-gradient-to-r from-mtg-blue to-mtg-green"
     },
