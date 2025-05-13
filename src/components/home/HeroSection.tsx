@@ -33,7 +33,7 @@ const HeroSection = () => {
                 <img
                   alt="Black Lotus"
                   className="h-full w-full object-cover"
-                  src="https://cards.scryfall.io/art_crop/front/b/a/ba953c32-8eb1-409a-9b7a-a2054b139068.jpg"
+                  src="/images/black-lotus.jpg"
                 />
               </div>
             </div>
