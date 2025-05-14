@@ -38,12 +38,11 @@ const HeroSection = () => {
                 </div>
               ) : (
                 <img
-                  src="/images/black-lotus.jpg"
+                  src="/images/black-lotus.png"
                   alt="Black Lotus"
-                  className="h-auto max-h-64 object-contain"
+                  className="h-auto max-h-72 object-contain transform hover:scale-105 transition-transform duration-300"
                   style={{ 
-                    filter: "drop-shadow(0px 8px 16px rgba(0,0,0,0.5))",
-                    mixBlendMode: "screen"
+                    filter: "drop-shadow(0px 10px 20px rgba(80, 0, 100, 0.7))",
                   }}
                   onError={() => setImageError(true)}
                 />
