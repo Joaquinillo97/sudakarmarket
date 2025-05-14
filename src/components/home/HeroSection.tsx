@@ -25,18 +25,8 @@ const HeroSection = () => {
               </Button>
             </div>
           </div>
-          <div className="flex items-center justify-center">
-            <div className="relative hidden md:flex">
-              <div className="absolute -left-4 top-0 h-72 w-56 rotate-6 transform rounded-2xl bg-mtg-blue opacity-40"></div>
-              <div className="absolute -right-4 top-6 h-72 w-56 -rotate-6 transform rounded-2xl bg-mtg-red opacity-40"></div>
-              <div className="relative h-72 w-56 overflow-hidden rounded-2xl shadow-lg">
-                <img
-                  alt="Black Lotus"
-                  className="h-full w-full object-cover"
-                  src="/images/black-lotus.jpg"
-                />
-              </div>
-            </div>
+          <div className="hidden md:flex items-center justify-center">
+            <div className="bg-black h-72 w-full rounded-2xl"></div>
           </div>
         </div>
       </div>
