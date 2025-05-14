@@ -2,10 +2,19 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const HeroSection = () => {
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    // Precargar la imagen para verificar si existe
+    const img = new Image();
+    img.src = "/images/black-lotus.png";
+    img.onload = () => setImageLoaded(true);
+    img.onerror = () => setImageError(true);
+  }, []);
 
   return (
     <section className="bg-gradient-to-b from-background to-muted py-12 md:py-20">
@@ -29,7 +38,7 @@ const HeroSection = () => {
               </Button>
             </div>
           </div>
-          <div className="hidden md:flex items-center justify-center">
+          <div className="flex items-center justify-center">
             <div className="relative w-full h-72 flex items-center justify-center">
               {imageError ? (
                 <div className="flex flex-col items-center justify-center h-full">
@@ -37,15 +46,23 @@ const HeroSection = () => {
                   <span className="text-white text-sm mt-2">Imagen no disponible</span>
                 </div>
               ) : (
-                <img
-                  src="/images/black-lotus.png"
-                  alt="Black Lotus"
-                  className="h-auto max-h-72 object-contain transform hover:scale-105 transition-transform duration-300"
-                  style={{ 
-                    filter: "drop-shadow(0px 10px 20px rgba(80, 0, 100, 0.7))",
-                  }}
-                  onError={() => setImageError(true)}
-                />
+                <div className="w-60 h-80 relative">
+                  {!imageLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="h-12 w-12 rounded-full border-4 border-t-transparent border-mtg-orange animate-spin"></div>
+                    </div>
+                  )}
+                  <img
+                    src="/images/black-lotus.png"
+                    alt="Black Lotus"
+                    className={`w-full h-full object-contain transform hover:scale-105 transition-transform duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    style={{ 
+                      filter: "drop-shadow(0px 0px 30px rgba(120, 0, 170, 0.8))",
+                    }}
+                    onError={() => setImageError(true)}
+                    onLoad={() => setImageLoaded(true)}
+                  />
+                </div>
               )}
             </div>
           </div>
