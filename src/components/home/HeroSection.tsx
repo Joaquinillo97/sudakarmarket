@@ -2,22 +2,68 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+// Import the image directly using ES module imports
+import blackLotusImage from "/images/black-lotus.png";
 
 const HeroSection = () => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageSrc, setImageSrc] = useState("");
 
   useEffect(() => {
-    // Simplified image preloading - only using PNG
+    // Try different approaches to load the image
+    // Approach 1: Set a base URL prefix
+    const baseUrl = import.meta.env.BASE_URL || "";
+    console.log("Base URL:", baseUrl);
+    
+    // Approach 2: Direct import (already done above)
+    console.log("Direct import path:", blackLotusImage);
+    
+    // Approach 3: Standard path with logging
+    const standardPath = "/images/black-lotus.png";
+    console.log("Attempting to load image from:", standardPath);
+    
+    // Approach 4: Relative path
+    const relativePath = "./images/black-lotus.png";
+    console.log("Attempting with relative path:", relativePath);
+
+    // Try to determine which path works
     const img = new Image();
-    img.src = "/images/black-lotus.png";
+    img.src = blackLotusImage; // Try the imported version first
+    
     img.onload = () => {
-      console.log("Black lotus PNG preloaded successfully");
+      console.log("Image loaded successfully using direct import");
+      setImageSrc(blackLotusImage);
       setImageLoaded(true);
     };
+    
     img.onerror = () => {
-      console.error("Failed to load black lotus PNG");
-      setImageError(true);
+      console.error("Failed to load image using direct import, trying with base URL");
+      const imgWithBase = new Image();
+      imgWithBase.src = baseUrl + "images/black-lotus.png";
+      
+      imgWithBase.onload = () => {
+        console.log("Image loaded successfully with base URL");
+        setImageSrc(baseUrl + "images/black-lotus.png");
+        setImageLoaded(true);
+      };
+      
+      imgWithBase.onerror = () => {
+        console.error("Failed with base URL, trying standard path");
+        const imgStandard = new Image();
+        imgStandard.src = standardPath;
+        
+        imgStandard.onload = () => {
+          console.log("Image loaded with standard path");
+          setImageSrc(standardPath);
+          setImageLoaded(true);
+        };
+        
+        imgStandard.onerror = () => {
+          console.error("All image loading attempts failed");
+          setImageError(true);
+        };
+      };
     };
   }, []);
 
@@ -57,23 +103,20 @@ const HeroSection = () => {
                       <div className="h-12 w-12 rounded-full border-4 border-t-transparent border-mtg-orange animate-spin"></div>
                     </div>
                   )}
-                  {/* Using only PNG without conditional logic */}
-                  <img
-                    src="/images/black-lotus.png"
-                    alt="Black Lotus"
-                    className={`w-full h-full object-contain transform hover:scale-105 transition-transform duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                    style={{ 
-                      filter: "drop-shadow(0px 0px 30px rgba(120, 0, 170, 0.8))",
-                    }}
-                    onError={(e) => {
-                      console.error("Failed to load Black Lotus image");
-                      setImageError(true);
-                    }}
-                    onLoad={() => {
-                      console.log("Black Lotus image loaded successfully");
-                      setImageLoaded(true);
-                    }}
-                  />
+                  {imageLoaded && (
+                    <img
+                      src={imageSrc}
+                      alt="Black Lotus"
+                      className="w-full h-full object-contain transform hover:scale-105 transition-transform duration-300"
+                      style={{ 
+                        filter: "drop-shadow(0px 0px 30px rgba(120, 0, 170, 0.8))",
+                      }}
+                      onError={(e) => {
+                        console.error("Failed to load Black Lotus image in the render phase");
+                        setImageError(true);
+                      }}
+                    />
+                  )}
                 </div>
               )}
             </div>
