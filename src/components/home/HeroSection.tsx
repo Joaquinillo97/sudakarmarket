@@ -34,7 +34,7 @@ const HeroSection = () => {
         if (cards.length > 0) {
           console.log(`Successfully loaded ${cards.length} top requested cards`);
           setTopCards(cards);
-          toast.success("¡Cartas más solicitadas cargadas correctamente!");
+          // Toast success notification removed
         } else {
           throw new Error("No se pudieron cargar las cartas más solicitadas");
         }
