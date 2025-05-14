@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 const HeroSection = () => {
   return (
@@ -26,7 +27,14 @@ const HeroSection = () => {
             </div>
           </div>
           <div className="hidden md:flex items-center justify-center">
-            <div className="bg-black h-72 w-full rounded-2xl"></div>
+            <div className="relative w-full h-72 flex items-center justify-center">
+              <img
+                src="/images/black-lotus.jpg"
+                alt="Black Lotus"
+                className="h-auto max-h-64 object-contain"
+                style={{ filter: "drop-shadow(0px 8px 16px rgba(0,0,0,0.5))" }}
+              />
+            </div>
           </div>
         </div>
       </div>
