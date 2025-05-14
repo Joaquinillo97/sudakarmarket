@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { useState, useEffect } from "react";
 
 const HeroSection = () => {
@@ -9,16 +8,16 @@ const HeroSection = () => {
   const [imageLoaded, setImageLoaded] = useState(false);
 
   useEffect(() => {
-    // Precargar la imagen para verificar si existe
+    // Simplified image preloading - only using PNG
     const img = new Image();
-    img.src = "/images/black-lotus.jpg"; // Intentamos usar el jpg como alternativa
-    img.onload = () => setImageLoaded(true);
+    img.src = "/images/black-lotus.png";
+    img.onload = () => {
+      console.log("Black lotus PNG preloaded successfully");
+      setImageLoaded(true);
+    };
     img.onerror = () => {
-      // Si falla jpg, intentamos con png
-      const imgPng = new Image();
-      imgPng.src = "/images/black-lotus.png";
-      imgPng.onload = () => setImageLoaded(true);
-      imgPng.onerror = () => setImageError(true);
+      console.error("Failed to load black lotus PNG");
+      setImageError(true);
     };
   }, []);
 
@@ -58,26 +57,20 @@ const HeroSection = () => {
                       <div className="h-12 w-12 rounded-full border-4 border-t-transparent border-mtg-orange animate-spin"></div>
                     </div>
                   )}
-                  {/* Intentamos con una imagen estática */}
+                  {/* Using only PNG without conditional logic */}
                   <img
-                    src={imageLoaded ? (new Image().src = "/images/black-lotus.jpg") || "/images/black-lotus.png" : "/images/black-lotus.jpg"}
+                    src="/images/black-lotus.png"
                     alt="Black Lotus"
                     className={`w-full h-full object-contain transform hover:scale-105 transition-transform duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                     style={{ 
                       filter: "drop-shadow(0px 0px 30px rgba(120, 0, 170, 0.8))",
                     }}
                     onError={(e) => {
-                      // Si falla, intentamos con PNG
-                      console.log("Error cargando JPG, intentando con PNG");
-                      const imgElement = e.target as HTMLImageElement;
-                      if (imgElement.src.includes(".jpg")) {
-                        imgElement.src = "/images/black-lotus.png";
-                      } else {
-                        setImageError(true);
-                      }
+                      console.error("Failed to load Black Lotus image");
+                      setImageError(true);
                     }}
                     onLoad={() => {
-                      console.log("Imagen cargada correctamente");
+                      console.log("Black Lotus image loaded successfully");
                       setImageLoaded(true);
                     }}
                   />

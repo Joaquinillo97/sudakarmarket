@@ -7,17 +7,12 @@ import ActionBanners from "@/components/home/ActionBanners";
 import { useEffect } from "react";
 
 const Index = () => {
-  // Precargar imágenes críticas
+  // Simplified preloading - only using PNG
   useEffect(() => {
-    const preloadImages = [
-      "/images/black-lotus.png",
-      "/images/black-lotus.jpg"
-    ];
-    
-    preloadImages.forEach(src => {
-      const img = new Image();
-      img.src = src;
-    });
+    const img = new Image();
+    img.src = "/images/black-lotus.png";
+    img.onload = () => console.log("Index: Black lotus PNG preloaded successfully");
+    img.onerror = () => console.error("Index: Failed to preload Black Lotus PNG");
   }, []);
   
   return (
