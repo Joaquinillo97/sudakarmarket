@@ -2,69 +2,34 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-// Import the image directly using ES module imports
-import blackLotusImage from "/images/black-lotus.png";
+import { toast } from "@/components/ui/sonner";
+import { getCardImageByExactName } from "@/services/scryfallImages";
 
 const HeroSection = () => {
-  const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageSrc, setImageSrc] = useState("");
+  const [imageError, setImageError] = useState(false);
+  const [blackLotusImage, setBlackLotusImage] = useState("");
 
   useEffect(() => {
-    // Try different approaches to load the image
-    // Approach 1: Set a base URL prefix
-    const baseUrl = import.meta.env.BASE_URL || "";
-    console.log("Base URL:", baseUrl);
-    
-    // Approach 2: Direct import (already done above)
-    console.log("Direct import path:", blackLotusImage);
-    
-    // Approach 3: Standard path with logging
-    const standardPath = "/images/black-lotus.png";
-    console.log("Attempting to load image from:", standardPath);
-    
-    // Approach 4: Relative path
-    const relativePath = "./images/black-lotus.png";
-    console.log("Attempting with relative path:", relativePath);
+    const loadBlackLotus = async () => {
+      try {
+        console.log("Fetching Black Lotus from Scryfall API");
+        // Intentar cargar Black Lotus de Alpha (LEA)
+        const imageUrl = await getCardImageByExactName("Black Lotus", "lea");
+        
+        if (imageUrl) {
+          console.log("Black Lotus image URL:", imageUrl);
+          setBlackLotusImage(imageUrl);
+        } else {
+          throw new Error("No se pudo obtener la imagen del Black Lotus");
+        }
+      } catch (error) {
+        console.error("Error en la carga del Black Lotus:", error);
+        setImageError(true);
+      }
+    };
 
-    // Try to determine which path works
-    const img = new Image();
-    img.src = blackLotusImage; // Try the imported version first
-    
-    img.onload = () => {
-      console.log("Image loaded successfully using direct import");
-      setImageSrc(blackLotusImage);
-      setImageLoaded(true);
-    };
-    
-    img.onerror = () => {
-      console.error("Failed to load image using direct import, trying with base URL");
-      const imgWithBase = new Image();
-      imgWithBase.src = baseUrl + "images/black-lotus.png";
-      
-      imgWithBase.onload = () => {
-        console.log("Image loaded successfully with base URL");
-        setImageSrc(baseUrl + "images/black-lotus.png");
-        setImageLoaded(true);
-      };
-      
-      imgWithBase.onerror = () => {
-        console.error("Failed with base URL, trying standard path");
-        const imgStandard = new Image();
-        imgStandard.src = standardPath;
-        
-        imgStandard.onload = () => {
-          console.log("Image loaded with standard path");
-          setImageSrc(standardPath);
-          setImageLoaded(true);
-        };
-        
-        imgStandard.onerror = () => {
-          console.error("All image loading attempts failed");
-          setImageError(true);
-        };
-      };
-    };
+    loadBlackLotus();
   }, []);
 
   return (
@@ -98,22 +63,28 @@ const HeroSection = () => {
                 </div>
               ) : (
                 <div className="w-60 h-80 relative">
-                  {!imageLoaded && (
+                  {!blackLotusImage && !imageError && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="h-12 w-12 rounded-full border-4 border-t-transparent border-mtg-orange animate-spin"></div>
                     </div>
                   )}
-                  {imageLoaded && (
+                  {blackLotusImage && (
                     <img
-                      src={imageSrc}
+                      src={blackLotusImage}
                       alt="Black Lotus"
                       className="w-full h-full object-contain transform hover:scale-105 transition-transform duration-300"
                       style={{ 
                         filter: "drop-shadow(0px 0px 30px rgba(120, 0, 170, 0.8))",
                       }}
+                      onLoad={() => {
+                        console.log("Black Lotus image loaded successfully in render phase");
+                        setImageLoaded(true);
+                        toast.success("¡Black Lotus cargado correctamente!");
+                      }}
                       onError={(e) => {
                         console.error("Failed to load Black Lotus image in the render phase");
                         setImageError(true);
+                        toast.error("Error al cargar la imagen del Black Lotus");
                       }}
                     />
                   )}
