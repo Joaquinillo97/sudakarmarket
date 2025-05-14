@@ -2,8 +2,11 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { useState } from "react";
 
 const HeroSection = () => {
+  const [imageError, setImageError] = useState(false);
+
   return (
     <section className="bg-gradient-to-b from-background to-muted py-12 md:py-20">
       <div className="container px-4 md:px-6">
@@ -28,12 +31,23 @@ const HeroSection = () => {
           </div>
           <div className="hidden md:flex items-center justify-center">
             <div className="relative w-full h-72 flex items-center justify-center">
-              <img
-                src="/images/black-lotus.jpg"
-                alt="Black Lotus"
-                className="h-auto max-h-64 object-contain"
-                style={{ filter: "drop-shadow(0px 8px 16px rgba(0,0,0,0.5))" }}
-              />
+              {imageError ? (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <span className="text-mtg-orange text-2xl font-magic">Black Lotus</span>
+                  <span className="text-white text-sm mt-2">Imagen no disponible</span>
+                </div>
+              ) : (
+                <img
+                  src="/images/black-lotus.jpg"
+                  alt="Black Lotus"
+                  className="h-auto max-h-64 object-contain"
+                  style={{ 
+                    filter: "drop-shadow(0px 8px 16px rgba(0,0,0,0.5))",
+                    mixBlendMode: "screen"
+                  }}
+                  onError={() => setImageError(true)}
+                />
+              )}
             </div>
           </div>
         </div>
