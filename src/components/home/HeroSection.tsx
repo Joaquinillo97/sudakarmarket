@@ -11,9 +11,15 @@ const HeroSection = () => {
   useEffect(() => {
     // Precargar la imagen para verificar si existe
     const img = new Image();
-    img.src = "/images/black-lotus.png";
+    img.src = "/images/black-lotus.jpg"; // Intentamos usar el jpg como alternativa
     img.onload = () => setImageLoaded(true);
-    img.onerror = () => setImageError(true);
+    img.onerror = () => {
+      // Si falla jpg, intentamos con png
+      const imgPng = new Image();
+      imgPng.src = "/images/black-lotus.png";
+      imgPng.onload = () => setImageLoaded(true);
+      imgPng.onerror = () => setImageError(true);
+    };
   }, []);
 
   return (
@@ -52,15 +58,28 @@ const HeroSection = () => {
                       <div className="h-12 w-12 rounded-full border-4 border-t-transparent border-mtg-orange animate-spin"></div>
                     </div>
                   )}
+                  {/* Intentamos con una imagen estática */}
                   <img
-                    src="/images/black-lotus.png"
+                    src={imageLoaded ? (new Image().src = "/images/black-lotus.jpg") || "/images/black-lotus.png" : "/images/black-lotus.jpg"}
                     alt="Black Lotus"
                     className={`w-full h-full object-contain transform hover:scale-105 transition-transform duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                     style={{ 
                       filter: "drop-shadow(0px 0px 30px rgba(120, 0, 170, 0.8))",
                     }}
-                    onError={() => setImageError(true)}
-                    onLoad={() => setImageLoaded(true)}
+                    onError={(e) => {
+                      // Si falla, intentamos con PNG
+                      console.log("Error cargando JPG, intentando con PNG");
+                      const imgElement = e.target as HTMLImageElement;
+                      if (imgElement.src.includes(".jpg")) {
+                        imgElement.src = "/images/black-lotus.png";
+                      } else {
+                        setImageError(true);
+                      }
+                    }}
+                    onLoad={() => {
+                      console.log("Imagen cargada correctamente");
+                      setImageLoaded(true);
+                    }}
                   />
                 </div>
               )}
