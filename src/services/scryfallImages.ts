@@ -1,4 +1,3 @@
-
 import { toast } from "@/components/ui/sonner";
 
 // Interfaz para la respuesta de la carta de Scryfall
@@ -36,6 +35,20 @@ export const POWER_NINE = [
   { name: "Mox Ruby", set: "lea" },
   { name: "Mox Emerald", set: "lea" },
   { name: "Timetwister", set: "lea" }
+];
+
+// Lista de las 10 cartas más solicitadas (basadas en wishlists)
+export const TOP_CARDS = [
+  { name: "Ragavan, Nimble Pilferer", set: "mh2" },
+  { name: "Solitude", set: "mh2" },
+  { name: "Force of Negation", set: "mh1" },
+  { name: "Urza's Saga", set: "mh2" },
+  { name: "Wrenn and Six", set: "mh1" },
+  { name: "Mishra's Bauble", set: "2xm" },
+  { name: "Murktide Regent", set: "mh2" },
+  { name: "Esper Sentinel", set: "mh2" },
+  { name: "Omnath, Locus of Creation", set: "znr" },
+  { name: "Endurance", set: "mh2" }
 ];
 
 // Función para obtener la imagen de una carta por su nombre exacto
@@ -108,7 +121,7 @@ export const getCardImageById = async (
   }
 };
 
-// Nueva función para cargar todas las imágenes de Power Nine
+// Función para cargar todas las imágenes de Power Nine
 export const loadPowerNineImages = async (): Promise<{name: string, image: string | null}[]> => {
   const results = await Promise.all(
     POWER_NINE.map(async (card) => {
@@ -119,6 +132,25 @@ export const loadPowerNineImages = async (): Promise<{name: string, image: strin
   
   // Filtrar las cartas que no pudieron cargarse
   return results.filter(card => card.image !== null);
+};
+
+// Nueva función para cargar las 10 cartas más solicitadas
+export const loadTopRequestedCards = async (): Promise<{name: string, image: string | null}[]> => {
+  try {
+    const results = await Promise.all(
+      TOP_CARDS.map(async (card) => {
+        const image = await getCardImageByExactName(card.name, card.set);
+        return { name: card.name, image };
+      })
+    );
+    
+    // Filtrar las cartas que no pudieron cargarse
+    return results.filter(card => card.image !== null);
+  } catch (error) {
+    console.error("Error cargando las cartas más solicitadas:", error);
+    toast.error("Error al cargar las cartas más solicitadas");
+    return [];
+  }
 };
 
 // Nota: Para futuras integraciones, aquí agregaríamos funciones para otras operaciones con la API de Scryfall

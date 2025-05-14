@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/sonner";
-import { loadPowerNineImages, POWER_NINE } from "@/services/scryfallImages";
+import { loadTopRequestedCards } from "@/services/scryfallImages";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { 
   Carousel, 
@@ -13,42 +13,41 @@ import {
   CarouselPrevious 
 } from "@/components/ui/carousel";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import useEmblaCarousel from 'embla-carousel-react';
 import { ChevronRight, ChevronLeft } from "lucide-react";
 
 const HeroSection = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [powerNineCards, setPowerNineCards] = useState<{ name: string; image: string | null }[]>([]);
+  const [topCards, setTopCards] = useState<{ name: string; image: string | null }[]>([]);
   const [api, setApi] = useState<any>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
 
-  // Load Power Nine images
+  // Load top requested cards
   useEffect(() => {
-    const fetchPowerNine = async () => {
+    const fetchTopCards = async () => {
       try {
         setLoading(true);
-        console.log("Fetching Power Nine images from Scryfall API");
-        const cards = await loadPowerNineImages();
+        console.log("Fetching top requested cards from Scryfall API");
+        const cards = await loadTopRequestedCards();
         
         if (cards.length > 0) {
-          console.log(`Successfully loaded ${cards.length} Power Nine card images`);
-          setPowerNineCards(cards);
-          toast.success("¡Cartas Power Nine cargadas correctamente!");
+          console.log(`Successfully loaded ${cards.length} top requested cards`);
+          setTopCards(cards);
+          toast.success("¡Cartas más solicitadas cargadas correctamente!");
         } else {
-          throw new Error("No se pudieron cargar las cartas Power Nine");
+          throw new Error("No se pudieron cargar las cartas más solicitadas");
         }
       } catch (error) {
-        console.error("Error cargando las cartas Power Nine:", error);
+        console.error("Error cargando las cartas más solicitadas:", error);
         setError(true);
-        toast.error("Error al cargar las imágenes de Power Nine");
+        toast.error("Error al cargar las imágenes de las cartas más solicitadas");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPowerNine();
+    fetchTopCards();
   }, []);
 
   // Autoplay carousel
@@ -78,18 +77,53 @@ const HeroSection = () => {
   // Get background gradient based on card index
   const getCardBackground = (index: number) => {
     const backgrounds = [
-      'bg-gradient-to-b from-black to-mtg-orange/30', // Black Lotus
-      'bg-gradient-to-b from-mtg-blue/50 to-mtg-blue/10', // Ancestral Recall
-      'bg-gradient-to-b from-mtg-blue/50 to-mtg-blue/10', // Time Walk
-      'bg-gradient-to-b from-mtg-white/50 to-mtg-white/10', // Mox Pearl
-      'bg-gradient-to-b from-mtg-blue/50 to-mtg-blue/10', // Mox Sapphire 
-      'bg-gradient-to-b from-mtg-black/50 to-mtg-black/10', // Mox Jet
-      'bg-gradient-to-b from-mtg-red/50 to-mtg-red/10',  // Mox Ruby
-      'bg-gradient-to-b from-mtg-green/50 to-mtg-green/10', // Mox Emerald
-      'bg-gradient-to-b from-mtg-blue/50 to-mtg-blue/10' // Timetwister
+      'bg-gradient-to-b from-mtg-red/50 to-mtg-red/10',     // Ragavan
+      'bg-gradient-to-b from-mtg-white/50 to-mtg-white/10', // Solitude
+      'bg-gradient-to-b from-mtg-blue/50 to-mtg-blue/10',   // Force of Negation
+      'bg-gradient-to-b from-mtg-black/50 to-mtg-black/10', // Urza's Saga
+      'bg-gradient-to-b from-mtg-green/50 to-mtg-green/10', // Wrenn and Six
+      'bg-gradient-to-b from-muted/50 to-muted/10',         // Mishra's Bauble
+      'bg-gradient-to-b from-mtg-blue/50 to-mtg-blue/10',   // Murktide Regent
+      'bg-gradient-to-b from-mtg-white/50 to-mtg-white/10', // Esper Sentinel
+      'bg-gradient-to-b from-mtg-orange/30 to-black',       // Omnath
+      'bg-gradient-to-b from-mtg-green/50 to-mtg-green/10'  // Endurance
     ];
     
     return backgrounds[index % backgrounds.length];
+  };
+
+  const getCardDescription = (name: string) => {
+    const descriptions: Record<string, string> = {
+      "Ragavan, Nimble Pilferer": "Un mono pirata que roba tesoro y maná a tus oponentes, dominante en formatos como Modern y Legacy.",
+      "Solitude": "Elemental que permite exiliar criaturas sin costo de maná si pagas vida, clave en mazos de control blanco.",
+      "Force of Negation": "Contramagia gratuita que exilia permanentes no criatura, usado en casi todos los mazos azules en Modern.",
+      "Urza's Saga": "Tierra encantamiento que crea constructos y busca artefactos de bajo coste, versátil en muchos arquetipos.",
+      "Wrenn and Six": "Planeswalker de bajo coste que recupera tierras y daña criaturas pequeñas, muy potente en Modern.",
+      "Mishra's Bauble": "Artefacto de coste cero que permite robar cartas con retraso, utilizado en mazos con delirium y Lurrus.",
+      "Murktide Regent": "Dragón azul que se hace más grande con cada carta exiliada del cementerio, finalizador en mazos tempo.",
+      "Esper Sentinel": "Criatura de un maná que hace que tus oponentes paguen más por sus hechizos no criatura o tú robas.",
+      "Omnath, Locus of Creation": "Elemental de cuatro colores que genera ventaja al entrar y cuando pones tierras en juego.",
+      "Endurance": "Elemental que puede ser lanzado gratis para interrumpir estrategias de cementerio, versátil en sideboard y maindeck.",
+    };
+    
+    return descriptions[name] || "Una de las cartas más solicitadas actualmente en el mundo de Magic: The Gathering.";
+  };
+
+  const getCardEdition = (name: string) => {
+    const editions: Record<string, string> = {
+      "Ragavan, Nimble Pilferer": "Modern Horizons 2 (2021)",
+      "Solitude": "Modern Horizons 2 (2021)",
+      "Force of Negation": "Modern Horizons (2019)",
+      "Urza's Saga": "Modern Horizons 2 (2021)",
+      "Wrenn and Six": "Modern Horizons (2019)",
+      "Mishra's Bauble": "Double Masters (2020)",
+      "Murktide Regent": "Modern Horizons 2 (2021)",
+      "Esper Sentinel": "Modern Horizons 2 (2021)",
+      "Omnath, Locus of Creation": "Zendikar Rising (2020)",
+      "Endurance": "Modern Horizons 2 (2021)",
+    };
+    
+    return editions[name] || "Edición reciente";
   };
 
   return (
@@ -123,7 +157,7 @@ const HeroSection = () => {
                 </div>
               ) : error ? (
                 <div className="w-full h-80 flex flex-col items-center justify-center">
-                  <span className="text-mtg-orange text-2xl font-magic">Power Nine</span>
+                  <span className="text-mtg-orange text-2xl font-magic">Cartas Populares</span>
                   <span className="text-white text-sm mt-2">Imágenes no disponibles</span>
                 </div>
               ) : (
@@ -138,7 +172,7 @@ const HeroSection = () => {
                     opts={{ loop: true }}
                   >
                     <CarouselContent>
-                      {powerNineCards.map((card, index) => (
+                      {topCards.map((card, index) => (
                         <CarouselItem key={card.name}>
                           <HoverCard>
                             <HoverCardTrigger>
@@ -159,8 +193,8 @@ const HeroSection = () => {
                             <HoverCardContent className="w-80 bg-black/80 border-mtg-orange text-white">
                               <div className="flex flex-col">
                                 <span className="text-lg font-magic text-mtg-orange">{card.name}</span>
-                                <p className="text-sm mt-2">Una de las legendarias Power Nine, las cartas más poderosas y valiosas de Magic: The Gathering.</p>
-                                <p className="text-xs mt-2 text-mtg-orange/80">Alpha Edition (1993)</p>
+                                <p className="text-sm mt-2">{getCardDescription(card.name)}</p>
+                                <p className="text-xs mt-2 text-mtg-orange/80">{getCardEdition(card.name)}</p>
                               </div>
                             </HoverCardContent>
                           </HoverCard>
@@ -177,7 +211,7 @@ const HeroSection = () => {
                   
                   {/* Indicador de cartas */}
                   <div className="flex justify-center mt-4 gap-1">
-                    {powerNineCards.map((_, index) => (
+                    {topCards.map((_, index) => (
                       <button
                         key={index}
                         className={`h-2 rounded-full transition-all ${
