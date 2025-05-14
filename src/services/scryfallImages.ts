@@ -25,6 +25,19 @@ interface ScryfallCardResponse {
   }>;
 }
 
+// Lista de cartas Power Nine con sus códigos de set para Alpha (LEA)
+export const POWER_NINE = [
+  { name: "Black Lotus", set: "lea" },
+  { name: "Ancestral Recall", set: "lea" },
+  { name: "Time Walk", set: "lea" },
+  { name: "Mox Pearl", set: "lea" },
+  { name: "Mox Sapphire", set: "lea" },
+  { name: "Mox Jet", set: "lea" },
+  { name: "Mox Ruby", set: "lea" },
+  { name: "Mox Emerald", set: "lea" },
+  { name: "Timetwister", set: "lea" }
+];
+
 // Función para obtener la imagen de una carta por su nombre exacto
 export const getCardImageByExactName = async (
   cardName: string, 
@@ -93,6 +106,19 @@ export const getCardImageById = async (
     toast.error("No se pudo cargar la imagen de la carta");
     return null;
   }
+};
+
+// Nueva función para cargar todas las imágenes de Power Nine
+export const loadPowerNineImages = async (): Promise<{name: string, image: string | null}[]> => {
+  const results = await Promise.all(
+    POWER_NINE.map(async (card) => {
+      const image = await getCardImageByExactName(card.name, card.set);
+      return { name: card.name, image };
+    })
+  );
+  
+  // Filtrar las cartas que no pudieron cargarse
+  return results.filter(card => card.image !== null);
 };
 
 // Nota: Para futuras integraciones, aquí agregaríamos funciones para otras operaciones con la API de Scryfall
