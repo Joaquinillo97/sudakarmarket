@@ -33,18 +33,39 @@ export const useCardFilters = () => {
   const searchParams = buildSearchParams(filters);
 
   const handleApplyFilters = (newFilters: CardFiltersState) => {
+    // Log the filter values for debugging
+    console.log("Applying filters:", JSON.stringify(newFilters));
+    
     setFilters(newFilters);
     setCurrentPage(1);
     
+    // Log which filters are active
+    const activeFilters = Object.entries(newFilters)
+      .filter(([key, value]) => {
+        if (key === 'priceRange') {
+          return value[0] > 0 || value[1] < 100000;
+        }
+        return value !== 'all' && value !== '';
+      })
+      .map(([key]) => key);
+      
+    const filterDescription = activeFilters.length > 0 
+      ? `Filtros activos: ${activeFilters.join(', ')}`
+      : 'Mostrando todas las cartas';
+      
     // Show toast for applying filters
     toast('Filtros aplicados', {
-      description: 'Buscando cartas con los filtros seleccionados.',
+      description: filterDescription,
     });
   };
 
   const handleClearFilters = () => {
     setFilters(defaultFilters);
     setCurrentPage(1);
+    
+    toast('Filtros eliminados', {
+      description: 'Mostrando todas las cartas sin filtros.',
+    });
   };
 
   const handlePageChange = (page: number) => {

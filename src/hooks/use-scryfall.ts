@@ -25,38 +25,37 @@ export function useSearchCards(searchParams: {
   } = searchParams;
   
   // Build Scryfall query
-  let query = name ? `name:/^${name}/` : "";
+  let query = "";
   
+  // Name filter - use exact name match if specified
+  if (name) {
+    query += `name:/^${name}/`;
+  }
+  
+  // Set filter - use set: operator with the set code
   if (set && set !== "all") {
-    // Use the set code directly (already in Scryfall format)
     query += query ? ` set:${set}` : `set:${set}`;
   }
   
-  // Color filter uses c: operator
+  // Color filter - use c: operator with the Scryfall color codes
+  // Color codes in Scryfall: W = white, U = blue, B = black, R = red, G = green, C = colorless, M = multicolor
   if (color && color !== "all") {
-    // Convert color from UI display name to Scryfall code
-    const colorMap: Record<string, string> = {
-      "white": "W",
-      "blue": "U",
-      "black": "B",
-      "red": "R",
-      "green": "G",
-      "colorless": "C",
-      "multicolor": "M"
-    };
-    const colorCode = colorMap[color] || color;
-    query += query ? ` c:${colorCode}` : `c:${colorCode}`;
+    query += query ? ` c:${color}` : `c:${color}`;
+    console.log(`Color filter applied: ${color}`);
   }
   
-  // Color identity filter uses ci: operator
+  // Color identity filter - use ci: operator
   if (colorIdentity && colorIdentity !== "all") {
     query += query ? ` ci:${colorIdentity}` : `ci:${colorIdentity}`;
+    console.log(`Color identity filter applied: ${colorIdentity}`);
   }
   
+  // Rarity filter - use r: operator
   if (rarity && rarity !== "all") {
     query += query ? ` r:${rarity}` : `r:${rarity}`;
   }
   
+  // Language filter - use lang: operator
   if (language && language !== "all") {
     query += query ? ` lang:${language}` : `lang:${language}`;
   }
@@ -82,19 +81,26 @@ export function useSearchCards(searchParams: {
         const minUsd = minPrice / 1000; // Assuming 1 USD = 1000 ARS
         const maxUsd = maxPrice / 1000;
         
+        console.log(`Filtering prices from ${minUsd} to ${maxUsd} USD`);
+        
         filteredData = filteredData.filter(card => {
           // Get the card price in USD (using usd or usd_foil)
           const cardPriceUsd = parseFloat(card.prices.usd || card.prices.usd_foil || '0');
           return cardPriceUsd >= minUsd && cardPriceUsd <= maxUsd;
         });
+        
+        console.log(`Cards after price filtering: ${filteredData.length}`);
       }
+      
+      // Apply client-side condition filtering if needed
+      // This would be implemented here
       
       return {
         ...response,
         data: filteredData.map(mapScryfallCardToAppCard)
       };
     },
-    enabled: !!query,
+    enabled: true, // Always enable the query to run even with empty string
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
@@ -140,6 +146,7 @@ export function buildSearchParams(filters: any) {
     rarity: filters.rarity || "all",
     language: filters.language || "all",
     priceRange: filters.priceRange || [0, 100000],
+    condition: filters.condition || "all",
   };
 }
 

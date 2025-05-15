@@ -17,6 +17,7 @@ import {
 import {
   Slider
 } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 import SearchAutocomplete from "./SearchAutocomplete";
 
 interface CardFiltersProps {
@@ -51,93 +52,104 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
+        <Label htmlFor="card-search" className="block mb-2">Nombre de carta</Label>
         <SearchAutocomplete 
           placeholder="¡Buscá tu carta!" 
           onSearch={handleSearchChange}
           redirectOnSelect={false}
           className="w-full"
+          id="card-search"
         />
       </div>
       
       <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <Label htmlFor="set-filter" className="block">Edición</Label>
+          <Select
+            value={filters.set}
+            onValueChange={(value) => handleFilterChange("set", value)}
+          >
+            <SelectTrigger id="set-filter">
+              <SelectValue placeholder="Edición" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="mh3">Modern Horizons 3</SelectItem>
+              <SelectItem value="otj">Outlaws of Thunder Junction</SelectItem>
+              <SelectItem value="mkm">Murders at Karlov Manor</SelectItem>
+              <SelectItem value="lci">Lost Caverns of Ixalan</SelectItem>
+              <SelectItem value="woe">Wilds of Eldraine</SelectItem>
+              <SelectItem value="mom">March of the Machine</SelectItem>
+              <SelectItem value="one">Phyrexia: All Will Be One</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="color-filter" className="block">Color</Label>
+          <Select
+            value={filters.color}
+            onValueChange={(value) => handleFilterChange("color", value)}
+          >
+            <SelectTrigger id="color-filter">
+              <SelectValue placeholder="Color" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="W">Blanco (W)</SelectItem>
+              <SelectItem value="U">Azul (U)</SelectItem>
+              <SelectItem value="B">Negro (B)</SelectItem>
+              <SelectItem value="R">Rojo (R)</SelectItem>
+              <SelectItem value="G">Verde (G)</SelectItem>
+              <SelectItem value="M">Multicolor</SelectItem>
+              <SelectItem value="C">Incoloro</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="color-identity-filter" className="block">Identidad de Color</Label>
         <Select
-          value={filters.set}
-          onValueChange={(value) => handleFilterChange("set", value)}
+          value={filters.colorIdentity}
+          onValueChange={(value) => handleFilterChange("colorIdentity", value)}
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Edición" />
+          <SelectTrigger id="color-identity-filter">
+            <SelectValue placeholder="Identidad de Color" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
-            {/* Set codes updated to match Scryfall format */}
-            <SelectItem value="mh3">Modern Horizons 3</SelectItem>
-            <SelectItem value="otj">Outlaws of Thunder Junction</SelectItem>
-            <SelectItem value="mkm">Murders at Karlov Manor</SelectItem>
-            <SelectItem value="lci">Lost Caverns of Ixalan</SelectItem>
-            <SelectItem value="woe">Wilds of Eldraine</SelectItem>
-            <SelectItem value="mom">March of the Machine</SelectItem>
-            <SelectItem value="one">Phyrexia: All Will Be One</SelectItem>
-          </SelectContent>
-        </Select>
-        
-        <Select
-          value={filters.color}
-          onValueChange={(value) => handleFilterChange("color", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Color" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="white">Blanco</SelectItem>
-            <SelectItem value="blue">Azul</SelectItem>
-            <SelectItem value="black">Negro</SelectItem>
-            <SelectItem value="red">Rojo</SelectItem>
-            <SelectItem value="green">Verde</SelectItem>
-            <SelectItem value="multicolor">Multicolor</SelectItem>
-            <SelectItem value="colorless">Incoloro</SelectItem>
+            <SelectItem value="W">Blanco (W)</SelectItem>
+            <SelectItem value="U">Azul (U)</SelectItem>
+            <SelectItem value="B">Negro (B)</SelectItem>
+            <SelectItem value="R">Rojo (R)</SelectItem>
+            <SelectItem value="G">Verde (G)</SelectItem>
+            <SelectItem value="WU">Azorius (W/U)</SelectItem>
+            <SelectItem value="WB">Orzhov (W/B)</SelectItem>
+            <SelectItem value="UB">Dimir (U/B)</SelectItem>
+            <SelectItem value="UR">Izzet (U/R)</SelectItem>
+            <SelectItem value="BR">Rakdos (B/R)</SelectItem>
+            <SelectItem value="BG">Golgari (B/G)</SelectItem>
+            <SelectItem value="RG">Gruul (R/G)</SelectItem>
+            <SelectItem value="WG">Selesnya (W/G)</SelectItem>
+            <SelectItem value="WR">Boros (W/R)</SelectItem>
+            <SelectItem value="UG">Simic (U/G)</SelectItem>
           </SelectContent>
         </Select>
       </div>
-
-      <Select
-        value={filters.colorIdentity}
-        onValueChange={(value) => handleFilterChange("colorIdentity", value)}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Identidad de Color" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todas</SelectItem>
-          <SelectItem value="W">Blanco</SelectItem>
-          <SelectItem value="U">Azul</SelectItem>
-          <SelectItem value="B">Negro</SelectItem>
-          <SelectItem value="R">Rojo</SelectItem>
-          <SelectItem value="G">Verde</SelectItem>
-          <SelectItem value="WU">Azorius (W/U)</SelectItem>
-          <SelectItem value="WB">Orzhov (W/B)</SelectItem>
-          <SelectItem value="UB">Dimir (U/B)</SelectItem>
-          <SelectItem value="UR">Izzet (U/R)</SelectItem>
-          <SelectItem value="BR">Rakdos (B/R)</SelectItem>
-          <SelectItem value="BG">Golgari (B/G)</SelectItem>
-          <SelectItem value="RG">Gruul (R/G)</SelectItem>
-          <SelectItem value="WG">Selesnya (W/G)</SelectItem>
-          <SelectItem value="WR">Boros (W/R)</SelectItem>
-          <SelectItem value="UG">Simic (U/G)</SelectItem>
-        </SelectContent>
-      </Select>
 
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="advanced-filters">
           <AccordionTrigger className="text-sm">Filtros avanzados</AccordionTrigger>
           <AccordionContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm">Rango de precio (ARS)</label>
+              <Label className="text-sm">Rango de precio (ARS)</Label>
               <Slider 
                 defaultValue={[0, 100000]} 
                 max={100000} 
                 step={1000}
                 onValueChange={(value) => handleFilterChange("priceRange", value)} 
+                className="mt-6" // Add space for the thumbs
               />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>${filters.priceRange[0].toLocaleString()}</span>
@@ -145,62 +157,71 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
               </div>
             </div>
             
-            <Select
-              value={filters.rarity}
-              onValueChange={(value) => handleFilterChange("rarity", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Rareza" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                <SelectItem value="common">Común</SelectItem>
-                <SelectItem value="uncommon">Infrecuente</SelectItem>
-                <SelectItem value="rare">Rara</SelectItem>
-                <SelectItem value="mythic">Mítica</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Label htmlFor="rarity-filter" className="block">Rareza</Label>
+              <Select
+                value={filters.rarity}
+                onValueChange={(value) => handleFilterChange("rarity", value)}
+              >
+                <SelectTrigger id="rarity-filter">
+                  <SelectValue placeholder="Rareza" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="common">Común</SelectItem>
+                  <SelectItem value="uncommon">Infrecuente</SelectItem>
+                  <SelectItem value="rare">Rara</SelectItem>
+                  <SelectItem value="mythic">Mítica</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             
-            <Select
-              value={filters.condition}
-              onValueChange={(value) => handleFilterChange("condition", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="mint">Mint (M)</SelectItem>
-                <SelectItem value="near_mint">Near Mint (NM)</SelectItem>
-                <SelectItem value="excellent">Excellent (EX)</SelectItem>
-                <SelectItem value="good">Good (GD)</SelectItem>
-                <SelectItem value="light_played">Light Played (LP)</SelectItem>
-                <SelectItem value="played">Played (PL)</SelectItem>
-                <SelectItem value="poor">Poor (PR)</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Label htmlFor="condition-filter" className="block">Estado</Label>
+              <Select
+                value={filters.condition}
+                onValueChange={(value) => handleFilterChange("condition", value)}
+              >
+                <SelectTrigger id="condition-filter">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="mint">Mint (M)</SelectItem>
+                  <SelectItem value="near_mint">Near Mint (NM)</SelectItem>
+                  <SelectItem value="excellent">Excellent (EX)</SelectItem>
+                  <SelectItem value="good">Good (GD)</SelectItem>
+                  <SelectItem value="light_played">Light Played (LP)</SelectItem>
+                  <SelectItem value="played">Played (PL)</SelectItem>
+                  <SelectItem value="poor">Poor (PR)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             
-            <Select
-              value={filters.language}
-              onValueChange={(value) => handleFilterChange("language", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Idioma" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="es">Español</SelectItem>
-                <SelectItem value="en">Inglés</SelectItem>
-                <SelectItem value="pt">Portugués</SelectItem>
-                <SelectItem value="ja">Japonés</SelectItem>
-                <SelectItem value="de">Alemán</SelectItem>
-                <SelectItem value="fr">Francés</SelectItem>
-                <SelectItem value="it">Italiano</SelectItem>
-                <SelectItem value="ko">Coreano</SelectItem>
-                <SelectItem value="ru">Ruso</SelectItem>
-                <SelectItem value="zh">Chino Simplificado</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Label htmlFor="language-filter" className="block">Idioma</Label>
+              <Select
+                value={filters.language}
+                onValueChange={(value) => handleFilterChange("language", value)}
+              >
+                <SelectTrigger id="language-filter">
+                  <SelectValue placeholder="Idioma" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="es">Español</SelectItem>
+                  <SelectItem value="en">Inglés</SelectItem>
+                  <SelectItem value="pt">Portugués</SelectItem>
+                  <SelectItem value="ja">Japonés</SelectItem>
+                  <SelectItem value="de">Alemán</SelectItem>
+                  <SelectItem value="fr">Francés</SelectItem>
+                  <SelectItem value="it">Italiano</SelectItem>
+                  <SelectItem value="ko">Coreano</SelectItem>
+                  <SelectItem value="ru">Ruso</SelectItem>
+                  <SelectItem value="zh">Chino Simplificado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
