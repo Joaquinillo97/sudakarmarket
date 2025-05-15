@@ -11,6 +11,7 @@ interface SearchAutocompleteProps {
   className?: string;
   onSearch?: (value: string) => void;
   redirectOnSelect?: boolean;
+  // Don't add 'id' to the interface as it's not used in the component
 }
 
 const SearchAutocomplete = ({

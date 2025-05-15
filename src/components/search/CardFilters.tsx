@@ -58,7 +58,7 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
           onSearch={handleSearchChange}
           redirectOnSelect={false}
           className="w-full"
-          id="card-search"
+          // The id prop was causing the build error - removing it
         />
       </div>
       
@@ -70,10 +70,10 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
             onValueChange={(value) => handleFilterChange("set", value)}
           >
             <SelectTrigger id="set-filter">
-              <SelectValue placeholder="Edición" />
+              <SelectValue placeholder="Todas las ediciones" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="all">Todas las ediciones</SelectItem>
               <SelectItem value="mh3">Modern Horizons 3</SelectItem>
               <SelectItem value="otj">Outlaws of Thunder Junction</SelectItem>
               <SelectItem value="mkm">Murders at Karlov Manor</SelectItem>
@@ -92,10 +92,10 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
             onValueChange={(value) => handleFilterChange("color", value)}
           >
             <SelectTrigger id="color-filter">
-              <SelectValue placeholder="Color" />
+              <SelectValue placeholder="Todos los colores" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="all">Todos los colores</SelectItem>
               <SelectItem value="W">Blanco (W)</SelectItem>
               <SelectItem value="U">Azul (U)</SelectItem>
               <SelectItem value="B">Negro (B)</SelectItem>
@@ -115,10 +115,10 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
           onValueChange={(value) => handleFilterChange("colorIdentity", value)}
         >
           <SelectTrigger id="color-identity-filter">
-            <SelectValue placeholder="Identidad de Color" />
+            <SelectValue placeholder="Todas las identidades" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="all">Todas las identidades</SelectItem>
             <SelectItem value="W">Blanco (W)</SelectItem>
             <SelectItem value="U">Azul (U)</SelectItem>
             <SelectItem value="B">Negro (B)</SelectItem>
@@ -164,10 +164,10 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
                 onValueChange={(value) => handleFilterChange("rarity", value)}
               >
                 <SelectTrigger id="rarity-filter">
-                  <SelectValue placeholder="Rareza" />
+                  <SelectValue placeholder="Todas las rarezas" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="all">Todas las rarezas</SelectItem>
                   <SelectItem value="common">Común</SelectItem>
                   <SelectItem value="uncommon">Infrecuente</SelectItem>
                   <SelectItem value="rare">Rara</SelectItem>
@@ -183,10 +183,10 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
                 onValueChange={(value) => handleFilterChange("condition", value)}
               >
                 <SelectTrigger id="condition-filter">
-                  <SelectValue placeholder="Estado" />
+                  <SelectValue placeholder="Todos los estados" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="all">Todos los estados</SelectItem>
                   <SelectItem value="mint">Mint (M)</SelectItem>
                   <SelectItem value="near_mint">Near Mint (NM)</SelectItem>
                   <SelectItem value="excellent">Excellent (EX)</SelectItem>
@@ -205,10 +205,10 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
                 onValueChange={(value) => handleFilterChange("language", value)}
               >
                 <SelectTrigger id="language-filter">
-                  <SelectValue placeholder="Idioma" />
+                  <SelectValue placeholder="Todos los idiomas" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="all">Todos los idiomas</SelectItem>
                   <SelectItem value="es">Español</SelectItem>
                   <SelectItem value="en">Inglés</SelectItem>
                   <SelectItem value="pt">Portugués</SelectItem>

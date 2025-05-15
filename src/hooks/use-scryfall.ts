@@ -53,11 +53,13 @@ export function useSearchCards(searchParams: {
   // Rarity filter - use r: operator
   if (rarity && rarity !== "all") {
     query += query ? ` r:${rarity}` : `r:${rarity}`;
+    console.log(`Rarity filter applied: ${rarity}`);
   }
   
   // Language filter - use lang: operator
   if (language && language !== "all") {
     query += query ? ` lang:${language}` : `lang:${language}`;
+    console.log(`Language filter applied: ${language}`);
   }
   
   // If no query is provided, search for recent cards
@@ -71,6 +73,7 @@ export function useSearchCards(searchParams: {
     queryKey: ['cards', query, page],
     queryFn: async () => {
       const response = await searchCards(query, page);
+      console.log("Scryfall API response:", response); // Added to debug API response
       
       // Apply client-side price filtering
       let filteredData = response.data;
@@ -86,18 +89,32 @@ export function useSearchCards(searchParams: {
         filteredData = filteredData.filter(card => {
           // Get the card price in USD (using usd or usd_foil)
           const cardPriceUsd = parseFloat(card.prices.usd || card.prices.usd_foil || '0');
-          return cardPriceUsd >= minUsd && cardPriceUsd <= maxUsd;
+          const withinRange = cardPriceUsd >= minUsd && cardPriceUsd <= maxUsd;
+          
+          // Log each card's price assessment for debugging
+          if (!withinRange) {
+            console.log(`Card "${card.name}" price ${cardPriceUsd} USD is outside range [${minUsd}, ${maxUsd}]`);
+          }
+          
+          return withinRange;
         });
         
         console.log(`Cards after price filtering: ${filteredData.length}`);
       }
       
-      // Apply client-side condition filtering if needed
-      // This would be implemented here
+      // Map the cards and ensure color data is included
+      const mappedCards = filteredData.map(card => {
+        const mappedCard = mapScryfallCardToAppCard(card);
+        // Log color info for the first few cards to verify color mapping
+        if (filteredData.indexOf(card) < 3) {
+          console.log(`Card "${card.name}" colors: ${card.colors.join(',')}, color identity: ${card.color_identity.join(',')}, mapped color: ${mappedCard.color}`);
+        }
+        return mappedCard;
+      });
       
       return {
         ...response,
-        data: filteredData.map(mapScryfallCardToAppCard)
+        data: mappedCards
       };
     },
     enabled: true, // Always enable the query to run even with empty string
