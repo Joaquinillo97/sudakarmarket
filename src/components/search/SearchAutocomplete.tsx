@@ -61,45 +61,49 @@ const SearchAutocomplete = ({
   }, [searchQuery]);
 
   return (
-    <Command className={`border rounded-md overflow-hidden ${className}`}>
-      <CommandInput
-        placeholder={placeholder}
-        value={searchQuery}
-        onValueChange={setSearchQuery}
-        className="focus:outline-none"
-      />
+    <div className={`relative ${className}`}>
+      <Command className="border rounded-md overflow-hidden">
+        <CommandInput
+          placeholder={placeholder}
+          value={searchQuery}
+          onValueChange={setSearchQuery}
+          className="focus:outline-none"
+        />
+      </Command>
       
       {open && (
-        <div className="relative">
-          {isLoading && (
-            <div className="p-2 flex items-center justify-center">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            </div>
-          )}
-          
-          {!isLoading && suggestions.length === 0 && (
-            <CommandEmpty className="py-2 px-2 text-sm text-muted-foreground">
-              No se encontraron cartas con ese nombre
-            </CommandEmpty>
-          )}
-          
-          {!isLoading && suggestions.length > 0 && (
-            <CommandGroup className="max-h-60 overflow-y-auto">
-              {suggestions.map((suggestion) => (
-                <CommandItem
-                  key={suggestion}
-                  value={suggestion}
-                  onSelect={handleSelectCard}
-                  className="cursor-pointer"
-                >
-                  {suggestion}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
+        <div className="absolute w-full z-50 bg-background border rounded-md mt-1 overflow-hidden shadow-md">
+          <Command>
+            {isLoading && (
+              <div className="p-2 flex items-center justify-center">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            )}
+            
+            {!isLoading && suggestions.length === 0 && (
+              <CommandEmpty className="py-2 px-2 text-sm text-muted-foreground">
+                No se encontraron cartas con ese nombre
+              </CommandEmpty>
+            )}
+            
+            {!isLoading && suggestions.length > 0 && (
+              <CommandGroup className="max-h-60 overflow-y-auto">
+                {suggestions.map((suggestion) => (
+                  <CommandItem
+                    key={suggestion}
+                    value={suggestion}
+                    onSelect={() => handleSelectCard(suggestion)}
+                    className="cursor-pointer"
+                  >
+                    {suggestion}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+          </Command>
         </div>
       )}
-    </Command>
+    </div>
   );
 };
 
