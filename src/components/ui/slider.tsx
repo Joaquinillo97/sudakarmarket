@@ -19,8 +19,14 @@ const Slider = React.forwardRef<
     <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
       <SliderPrimitive.Range className="absolute h-full bg-primary" />
     </SliderPrimitive.Track>
-    {/* The key issue was that we were using props.defaultValue?.length instead of checking the actual value */}
-    {Array.from({ length: props.value?.length || props.defaultValue?.length || 2 }).map((_, i) => (
+    {/* Fixed issue with Slider thumbs - ensure both thumbs are rendered */}
+    {props.value?.map((_, i) => (
+      <SliderPrimitive.Thumb
+        key={i}
+        className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+      />
+    )) || 
+    props.defaultValue?.map((_, i) => (
       <SliderPrimitive.Thumb
         key={i}
         className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"

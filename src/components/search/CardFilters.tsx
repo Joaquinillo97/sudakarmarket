@@ -46,6 +46,7 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Submitting filters:", filters);
     onApplyFilters(filters);
   };
 
@@ -58,7 +59,6 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
           onSearch={handleSearchChange}
           redirectOnSelect={false}
           className="w-full"
-          // The id prop was causing the build error - removing it
         />
       </div>
       
@@ -145,6 +145,7 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
             <div className="space-y-2">
               <Label className="text-sm">Rango de precio (ARS)</Label>
               <Slider 
+                value={filters.priceRange}
                 defaultValue={[0, 100000]} 
                 max={100000} 
                 step={1000}
