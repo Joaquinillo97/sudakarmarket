@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -18,7 +17,7 @@ import {
 import {
   Slider
 } from "@/components/ui/slider";
-import { Search } from "lucide-react";
+import SearchAutocomplete from "./SearchAutocomplete";
 
 interface CardFiltersProps {
   onApplyFilters: (filters: any) => void;
@@ -39,6 +38,10 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  const handleSearchChange = (cardName: string) => {
+    handleFilterChange("name", cardName);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onApplyFilters(filters);
@@ -46,14 +49,12 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="¡Buscá tu carta!"
-          className="pl-8"
-          value={filters.name}
-          onChange={(e) => handleFilterChange("name", e.target.value)}
+      <div>
+        <SearchAutocomplete 
+          placeholder="¡Buscá tu carta!" 
+          onSearch={handleSearchChange}
+          redirectOnSelect={false}
+          className="w-full"
         />
       </div>
       

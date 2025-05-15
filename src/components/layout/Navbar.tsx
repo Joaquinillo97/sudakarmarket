@@ -10,9 +10,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, Search, User } from "lucide-react";
+import { Menu, User } from "lucide-react";
+import SearchAutocomplete from "@/components/search/SearchAutocomplete";
 
 const Navbar = () => {
   const isMobile = useIsMobile();
@@ -59,13 +59,8 @@ const Navbar = () => {
         )}
 
         <div className="flex items-center gap-4">
-          <div className="relative hidden md:block">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Buscar cartas..."
-              className="w-64 pl-8"
-            />
+          <div className="relative hidden md:block w-64">
+            <SearchAutocomplete />
           </div>
 
           <DropdownMenu>
@@ -99,11 +94,9 @@ const Navbar = () => {
       {isMobile && isMenuOpen && (
         <div className="container border-t py-3 px-4">
           <div className="relative mb-3">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
+            <SearchAutocomplete
               placeholder="Buscar cartas..."
-              className="w-full pl-8"
+              className="w-full"
             />
           </div>
           <div className="flex flex-col space-y-2">
