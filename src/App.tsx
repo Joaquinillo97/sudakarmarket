@@ -12,6 +12,7 @@ import WishlistPage from "./pages/WishlistPage";
 import ProfilePage from "./pages/ProfilePage";
 import SellersPage from "./pages/SellersPage";
 import CollectionPage from "./pages/CollectionPage";
+import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/sellers" element={<SellersPage />} />
             <Route path="/collection" element={<CollectionPage />} />
+            <Route path="/auth" element={<AuthPage />} />
             <Route path="/import" element={<Navigate to="/collection" />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

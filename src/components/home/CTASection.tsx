@@ -14,7 +14,7 @@ const CTASection = () => {
           </div>
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button size="lg" asChild className="text-lg font-magic">
-              <Link to="/register">¡Registrarme ahora!</Link>
+              <Link to="/auth">¡Registrarme ahora!</Link>
             </Button>
           </div>
         </div>
