@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCardAutocomplete } from "@/hooks/use-scryfall";
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Loader2 } from "lucide-react";
@@ -20,12 +20,13 @@ const SearchAutocomplete = ({
   redirectOnSelect = true
 }: SearchAutocompleteProps) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   
   // Only fetch suggestions if we have at least 2 characters
   const { data: suggestionsData, isLoading } = useCardAutocomplete(searchQuery);
   
-  // Ensure we have a valid array of suggestions
+  // Make sure suggestions is always a properly initialized array
   const suggestions = Array.isArray(suggestionsData) ? suggestionsData : [];
   
   // Handle item selection
@@ -45,10 +46,20 @@ const SearchAutocomplete = ({
       onSearch(cardName);
     }
     
-    // Reset the input
+    // Reset the input and close the suggestions
     setSearchQuery("");
+    setOpen(false);
   };
   
+  // Control the open state based on input length
+  useEffect(() => {
+    if (searchQuery.length >= 2) {
+      setOpen(true);
+    } else {
+      setOpen(false);
+    }
+  }, [searchQuery]);
+
   return (
     <Command className={`border rounded-md overflow-hidden ${className}`}>
       <CommandInput
@@ -58,39 +69,35 @@ const SearchAutocomplete = ({
         className="focus:outline-none"
       />
       
-      {searchQuery.length >= 2 && (
-        <>
+      {open && (
+        <div className="relative">
           {isLoading && (
             <div className="p-2 flex items-center justify-center">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           )}
           
-          {!isLoading && (
-            <>
-              {suggestions.length === 0 && (
-                <CommandEmpty className="py-2 px-2 text-sm text-muted-foreground">
-                  No se encontraron cartas con ese nombre
-                </CommandEmpty>
-              )}
-              
-              {suggestions.length > 0 && (
-                <CommandGroup className="max-h-60 overflow-y-auto">
-                  {suggestions.map((suggestion) => (
-                    <CommandItem
-                      key={suggestion}
-                      value={suggestion}
-                      onSelect={handleSelectCard}
-                      className="cursor-pointer"
-                    >
-                      {suggestion}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-            </>
+          {!isLoading && suggestions.length === 0 && (
+            <CommandEmpty className="py-2 px-2 text-sm text-muted-foreground">
+              No se encontraron cartas con ese nombre
+            </CommandEmpty>
           )}
-        </>
+          
+          {!isLoading && suggestions.length > 0 && (
+            <CommandGroup className="max-h-60 overflow-y-auto">
+              {suggestions.map((suggestion) => (
+                <CommandItem
+                  key={suggestion}
+                  value={suggestion}
+                  onSelect={handleSelectCard}
+                  className="cursor-pointer"
+                >
+                  {suggestion}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+        </div>
       )}
     </Command>
   );
