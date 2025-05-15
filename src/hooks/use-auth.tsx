@@ -1,5 +1,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Define the user type
 interface User {
@@ -32,11 +34,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        // This will be implemented with Supabase
-        // For now, just check localStorage for demo purposes
-        const userData = localStorage.getItem('mtg-exchange-user');
-        if (userData) {
-          setUser(JSON.parse(userData));
+        setIsLoading(true);
+        
+        // Get current session from Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, email, username, avatar_url')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profile) {
+            setUser({
+              id: profile.id,
+              email: profile.email,
+              username: profile.username,
+              avatar_url: profile.avatar_url
+            });
+          }
         }
       } catch (error) {
         console.error("Session check failed", error);
@@ -46,72 +63,135 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     
     checkSession();
+    
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, email, username, avatar_url')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profile) {
+            setUser({
+              id: profile.id,
+              email: profile.email,
+              username: profile.username,
+              avatar_url: profile.avatar_url
+            });
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
+      }
+    );
+    
+    // Clean up subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
   
-  // Mock authentication functions - to be replaced with Supabase
+  // Sign in with email and password
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock successful login
-      const mockUser = { 
-        id: 'mock-user-id', 
+      const { error } = await supabase.auth.signInWithPassword({
         email,
-        username: email.split('@')[0]
-      };
-      setUser(mockUser);
-      localStorage.setItem('mtg-exchange-user', JSON.stringify(mockUser));
-    } catch (error) {
+        password
+      });
+      
+      if (error) throw error;
+      toast.success("¡Inicio de sesión exitoso!");
+    } catch (error: any) {
       console.error("Sign in failed", error);
+      toast.error("Error al iniciar sesión: " + error.message);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
   
+  // Sign up with email, password and username
   const signUp = async (email: string, password: string, username: string) => {
     setIsLoading(true);
     try {
-      // Mock successful registration
-      const mockUser = { 
-        id: 'mock-user-id', 
-        email,
-        username
-      };
-      setUser(mockUser);
-      localStorage.setItem('mtg-exchange-user', JSON.stringify(mockUser));
-    } catch (error) {
+      // Check if username already exists
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .single();
+        
+      if (existingUser) {
+        throw new Error("El nombre de usuario ya está en uso");
+      }
+      
+      // Register user with Supabase Auth
+      const { error, data } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            username
+          }
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast.success("¡Registro exitoso! Verifica tu correo electrónico.");
+    } catch (error: any) {
       console.error("Sign up failed", error);
+      toast.error("Error al registrarse: " + error.message);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
   
+  // Sign out
   const signOut = async () => {
     setIsLoading(true);
     try {
-      // Mock sign out
-      setUser(null);
-      localStorage.removeItem('mtg-exchange-user');
-    } catch (error) {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast.success("Has cerrado sesión");
+    } catch (error: any) {
       console.error("Sign out failed", error);
+      toast.error("Error al cerrar sesión: " + error.message);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
   
+  // Update user profile
   const updateProfile = async (data: Partial<User>) => {
+    if (!user) throw new Error("Usuario no autenticado");
+    
     setIsLoading(true);
     try {
-      // Mock profile update
-      if (user) {
-        const updatedUser = { ...user, ...data };
-        setUser(updatedUser);
-        localStorage.setItem('mtg-exchange-user', JSON.stringify(updatedUser));
-      }
-    } catch (error) {
+      const updates = {
+        ...data,
+        updated_at: new Date().toISOString(),
+      };
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setUser(prev => prev ? { ...prev, ...data } : null);
+      toast.success("Perfil actualizado correctamente");
+    } catch (error: any) {
       console.error("Profile update failed", error);
+      toast.error("Error al actualizar el perfil: " + error.message);
       throw error;
     } finally {
       setIsLoading(false);
@@ -143,5 +223,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-// Wrap the app with this provider in App.tsx
