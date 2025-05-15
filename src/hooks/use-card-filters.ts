@@ -7,6 +7,7 @@ export interface CardFiltersState {
   name: string;
   set: string;
   color: string;
+  colorIdentity: string;
   rarity: string;
   priceRange: [number, number];
   condition: string;
@@ -17,6 +18,7 @@ export const defaultFilters: CardFiltersState = {
   name: "",
   set: "all",
   color: "all",
+  colorIdentity: "all",
   rarity: "all",
   priceRange: [0, 100000],
   condition: "all",

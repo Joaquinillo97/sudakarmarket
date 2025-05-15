@@ -28,6 +28,7 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
     name: "",
     set: "all",
     color: "all",
+    colorIdentity: "all",
     rarity: "all",
     priceRange: [0, 100000],
     condition: "all",
@@ -68,6 +69,7 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
+            {/* Set codes updated to match Scryfall format */}
             <SelectItem value="mh3">Modern Horizons 3</SelectItem>
             <SelectItem value="otj">Outlaws of Thunder Junction</SelectItem>
             <SelectItem value="mkm">Murders at Karlov Manor</SelectItem>
@@ -97,6 +99,33 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
           </SelectContent>
         </Select>
       </div>
+
+      <Select
+        value={filters.colorIdentity}
+        onValueChange={(value) => handleFilterChange("colorIdentity", value)}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Identidad de Color" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Todas</SelectItem>
+          <SelectItem value="W">Blanco</SelectItem>
+          <SelectItem value="U">Azul</SelectItem>
+          <SelectItem value="B">Negro</SelectItem>
+          <SelectItem value="R">Rojo</SelectItem>
+          <SelectItem value="G">Verde</SelectItem>
+          <SelectItem value="WU">Azorius (W/U)</SelectItem>
+          <SelectItem value="WB">Orzhov (W/B)</SelectItem>
+          <SelectItem value="UB">Dimir (U/B)</SelectItem>
+          <SelectItem value="UR">Izzet (U/R)</SelectItem>
+          <SelectItem value="BR">Rakdos (B/R)</SelectItem>
+          <SelectItem value="BG">Golgari (B/G)</SelectItem>
+          <SelectItem value="RG">Gruul (R/G)</SelectItem>
+          <SelectItem value="WG">Selesnya (W/G)</SelectItem>
+          <SelectItem value="WR">Boros (W/R)</SelectItem>
+          <SelectItem value="UG">Simic (U/G)</SelectItem>
+        </SelectContent>
+      </Select>
 
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="advanced-filters">
