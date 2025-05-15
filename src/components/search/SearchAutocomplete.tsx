@@ -22,11 +22,11 @@ const SearchAutocomplete = ({
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   
-  // Fetch suggestions from Scryfall API
+  // Only fetch suggestions if we have at least 2 characters
   const { data: suggestionsData, isLoading } = useCardAutocomplete(searchQuery);
   
   // Ensure we have a valid array of suggestions
-  const suggestions = suggestionsData || [];
+  const suggestions = Array.isArray(suggestionsData) ? suggestionsData : [];
   
   // Handle item selection
   const handleSelectCard = (cardName: string) => {
@@ -68,11 +68,13 @@ const SearchAutocomplete = ({
           
           {!isLoading && (
             <>
-              <CommandEmpty className="py-2 px-2 text-sm text-muted-foreground">
-                No se encontraron cartas con ese nombre
-              </CommandEmpty>
+              {suggestions.length === 0 && (
+                <CommandEmpty className="py-2 px-2 text-sm text-muted-foreground">
+                  No se encontraron cartas con ese nombre
+                </CommandEmpty>
+              )}
               
-              {suggestions && suggestions.length > 0 && (
+              {suggestions.length > 0 && (
                 <CommandGroup className="max-h-60 overflow-y-auto">
                   {suggestions.map((suggestion) => (
                     <CommandItem
