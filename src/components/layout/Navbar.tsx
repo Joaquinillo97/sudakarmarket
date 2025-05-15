@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,12 +11,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, User } from "lucide-react";
+import { Menu, User, LogOut } from "lucide-react";
 import SearchAutocomplete from "@/components/search/SearchAutocomplete";
+import { useAuth } from "@/hooks/use-auth";
 
 const Navbar = () => {
   const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isAuthenticated, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
@@ -63,31 +71,42 @@ const Navbar = () => {
             <SearchAutocomplete />
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Mi cuenta</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Link to="/profile" className="w-full">Perfil</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link to="/collection" className="w-full">Mi colección</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link to="/wishlist" className="w-full">Mi wishlist</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link to="/messages" className="w-full">Mensajes</Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Cerrar sesión</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <User className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  {user?.username || 'Mi cuenta'}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Link to="/profile" className="w-full">Perfil</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link to="/collection" className="w-full">Mi colección</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link to="/wishlist" className="w-full">Mi wishlist</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link to="/messages" className="w-full">Mensajes</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="text-red-500 flex items-center gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Cerrar sesión
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/auth">Iniciar sesión</Link>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -135,6 +154,27 @@ const Navbar = () => {
             >
               Mi Perfil
             </Link>
+            {isAuthenticated ? (
+              <Button 
+                variant="outline" 
+                className="mt-2 w-full" 
+                onClick={() => {
+                  handleSignOut();
+                  setIsMenuOpen(false);
+                }}
+              >
+                Cerrar sesión
+              </Button>
+            ) : (
+              <Button 
+                variant="outline" 
+                className="mt-2 w-full" 
+                asChild
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Link to="/auth">Iniciar sesión</Link>
+              </Button>
+            )}
           </div>
         </div>
       )}
