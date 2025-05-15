@@ -100,9 +100,15 @@ export const getAutocompleteSuggestions = async (query: string): Promise<string[
   if (!query || query.length < 2) return [];
   
   const url = `${SCRYFALL_API_BASE}/cards/autocomplete?q=${encodeURIComponent(query)}`;
-  const response = await fetch(url);
-  const result = await handleResponse<{ data: string[] }>(response);
-  return result.data;
+  
+  try {
+    const response = await fetch(url);
+    const result = await handleResponse<{ data: string[] }>(response);
+    return Array.isArray(result.data) ? result.data : [];
+  } catch (error) {
+    console.error('Error fetching autocomplete suggestions:', error);
+    return [];
+  }
 };
 
 // Helper function to map Scryfall cards to our application's card format
@@ -183,7 +189,7 @@ export const mapScryfallCardToAppCard = (card: ScryfallCard): AppCard => {
   return {
     id: card.id,
     name: card.name,
-    set: card.set_name,
+    set: card.set_name,  // Usar siempre el nombre de la edición (set_name)
     imageUrl: imageUrl,
     price: arsPrice,
     seller: sellers[randomSellerIndex],
