@@ -26,6 +26,19 @@ const Navbar = () => {
     navigate("/auth");
   };
 
+  // Define public navigation links (visible to all users)
+  const publicNavItems = [
+    { label: "Cartas", path: "/cards" },
+    { label: "Vendedores", path: "/sellers" },
+  ];
+
+  // Define protected navigation links (visible only to authenticated users)
+  const protectedNavItems = [
+    { label: "Mi Colección", path: "/collection" },
+    { label: "Wishlist", path: "/wishlist" },
+    { label: "Mi Perfil", path: "/profile" },
+  ];
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
@@ -48,21 +61,27 @@ const Navbar = () => {
 
         {!isMobile && (
           <div className="hidden md:flex items-center gap-6">
-            <Link to="/cards" className="text-sm font-magic hover:text-mtg-orange transition-colors">
-              Cartas
-            </Link>
-            <Link to="/sellers" className="text-sm font-magic hover:text-mtg-orange transition-colors">
-              Vendedores
-            </Link>
-            <Link to="/collection" className="text-sm font-magic hover:text-mtg-orange transition-colors">
-              Mi Colección
-            </Link>
-            <Link to="/wishlist" className="text-sm font-magic hover:text-mtg-orange transition-colors">
-              Wishlist
-            </Link>
-            <Link to="/profile" className="text-sm font-magic hover:text-mtg-orange transition-colors">
-              Mi Perfil
-            </Link>
+            {/* Always show public nav items */}
+            {publicNavItems.map((item) => (
+              <Link 
+                key={item.path}
+                to={item.path} 
+                className="text-sm font-magic hover:text-mtg-orange transition-colors"
+              >
+                {item.label}
+              </Link>
+            ))}
+            
+            {/* Conditionally show protected items */}
+            {isAuthenticated && protectedNavItems.map((item) => (
+              <Link 
+                key={item.path}
+                to={item.path} 
+                className="text-sm font-magic hover:text-mtg-orange transition-colors"
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
         )}
 
@@ -119,41 +138,30 @@ const Navbar = () => {
             />
           </div>
           <div className="flex flex-col space-y-2">
-            <Link 
-              to="/cards" 
-              className="px-2 py-1.5 text-sm font-magic rounded-md hover:bg-secondary"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Cartas
-            </Link>
-            <Link 
-              to="/sellers" 
-              className="px-2 py-1.5 text-sm font-magic rounded-md hover:bg-secondary"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Vendedores
-            </Link>
-            <Link 
-              to="/collection" 
-              className="px-2 py-1.5 text-sm font-magic rounded-md hover:bg-secondary"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Mi Colección
-            </Link>
-            <Link 
-              to="/wishlist" 
-              className="px-2 py-1.5 text-sm font-magic rounded-md hover:bg-secondary"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Wishlist
-            </Link>
-            <Link 
-              to="/profile" 
-              className="px-2 py-1.5 text-sm font-magic rounded-md hover:bg-secondary"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Mi Perfil
-            </Link>
+            {/* Always show public nav items in mobile menu */}
+            {publicNavItems.map((item) => (
+              <Link 
+                key={item.path}
+                to={item.path} 
+                className="px-2 py-1.5 text-sm font-magic rounded-md hover:bg-secondary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+            
+            {/* Conditionally show protected items in mobile menu */}
+            {isAuthenticated && protectedNavItems.map((item) => (
+              <Link 
+                key={item.path}
+                to={item.path} 
+                className="px-2 py-1.5 text-sm font-magic rounded-md hover:bg-secondary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+            
             {isAuthenticated ? (
               <Button 
                 variant="outline" 

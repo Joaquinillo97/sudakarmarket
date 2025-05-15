@@ -14,6 +14,7 @@ import SellersPage from "./pages/SellersPage";
 import CollectionPage from "./pages/CollectionPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -25,16 +26,22 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/cards" element={<CardsPage />} />
             <Route path="/cards/:cardId" element={<CardDetailsPage />} />
-            <Route path="/wishlist" element={<WishlistPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
             <Route path="/sellers" element={<SellersPage />} />
-            <Route path="/collection" element={<CollectionPage />} />
             <Route path="/auth" element={<AuthPage />} />
-            <Route path="/import" element={<Navigate to="/collection" />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            
+            {/* Protected routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/wishlist" element={<WishlistPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/collection" element={<CollectionPage />} />
+              <Route path="/import" element={<Navigate to="/collection" />} />
+            </Route>
+            
+            {/* 404 route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
