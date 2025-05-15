@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useCardAutocomplete } from "@/hooks/use-scryfall";
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Loader2 } from "lucide-react";
@@ -23,7 +23,10 @@ const SearchAutocomplete = ({
   const navigate = useNavigate();
   
   // Fetch suggestions from Scryfall API
-  const { data: suggestions, isLoading } = useCardAutocomplete(searchQuery);
+  const { data: suggestionsData, isLoading } = useCardAutocomplete(searchQuery);
+  
+  // Ensure we have a valid array of suggestions
+  const suggestions = suggestionsData || [];
   
   // Handle item selection
   const handleSelectCard = (cardName: string) => {
@@ -69,18 +72,20 @@ const SearchAutocomplete = ({
                 No se encontraron cartas con ese nombre
               </CommandEmpty>
               
-              <CommandGroup className="max-h-60 overflow-y-auto">
-                {suggestions?.map((suggestion) => (
-                  <CommandItem
-                    key={suggestion}
-                    value={suggestion}
-                    onSelect={handleSelectCard}
-                    className="cursor-pointer"
-                  >
-                    {suggestion}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+              {suggestions && suggestions.length > 0 && (
+                <CommandGroup className="max-h-60 overflow-y-auto">
+                  {suggestions.map((suggestion) => (
+                    <CommandItem
+                      key={suggestion}
+                      value={suggestion}
+                      onSelect={handleSelectCard}
+                      className="cursor-pointer"
+                    >
+                      {suggestion}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
             </>
           )}
         </>
