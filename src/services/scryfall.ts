@@ -103,8 +103,19 @@ export const getAutocompleteSuggestions = async (query: string): Promise<string[
   
   try {
     const response = await fetch(url);
-    const result = await handleResponse<{ data: string[] }>(response);
-    return Array.isArray(result.data) ? result.data : [];
+    
+    if (!response.ok) {
+      console.error(`Autocomplete API error: ${response.status}`);
+      return [];
+    }
+    
+    const result = await response.json();
+    
+    if (result && Array.isArray(result.data)) {
+      return result.data;
+    }
+    
+    return [];
   } catch (error) {
     console.error('Error fetching autocomplete suggestions:', error);
     return [];

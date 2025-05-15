@@ -74,13 +74,14 @@ export function useCardAutocomplete(query: string) {
     queryFn: () => getAutocompleteSuggestions(query),
     enabled: query.length >= 2,
     staleTime: 1000 * 60 * 60, // 1 hour
-    // Siempre devolvemos un array vacío si no hay resultados
+    // Always return an empty array if the query fails or there are no results
     select: (data) => {
       if (!data || !Array.isArray(data)) {
         return [];
       }
       return data;
-    }
+    },
+    placeholderData: [], // Provide empty array as placeholder data
   });
 }
 
