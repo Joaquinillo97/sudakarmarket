@@ -20,6 +20,9 @@ const SellerStockDialog = ({
 }: SellerStockDialogProps) => {
   if (!seller) return null;
   
+  // Filter cards to only show ones that are for trade/sale
+  const availableCards = cards?.filter(card => card.seller && card.price > 0);
+  
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl">
@@ -28,8 +31,8 @@ const SellerStockDialog = ({
         </DialogHeader>
         {isLoading ? (
           <div className="text-center py-10">Cargando cartas...</div>
-        ) : cards && cards.length > 0 ? (
-          <CardGrid cards={cards} />
+        ) : availableCards && availableCards.length > 0 ? (
+          <CardGrid cards={availableCards} />
         ) : (
           <div className="text-center py-10">Este vendedor no tiene cartas para vender actualmente.</div>
         )}

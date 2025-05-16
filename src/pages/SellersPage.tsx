@@ -41,7 +41,7 @@ const SellersPage = () => {
         avatar_url: profile.avatar_url,
         location: profile.location,
         rating: profile.rating || 5.0,
-        // Use optional chaining and type casting for custom fields that may not exist in the database
+        // Use type casting for custom fields that may not exist in the database
         subscriptionType: (profile as any).subscription_type || 'free',
         // Add name and avatar for ChatInterface compatibility
         name: profile.username || 'Usuario sin nombre',
@@ -51,7 +51,7 @@ const SellersPage = () => {
     enabled: isAuthenticated // Only run query if user is authenticated
   });
   
-  // Fetch seller's cards
+  // Fetch seller's cards that are marked for trade
   const { data: sellerCards, isLoading: isLoadingCards } = useQuery({
     queryKey: ['sellerCards', selectedSeller],
     queryFn: async () => {
@@ -64,7 +64,7 @@ const SellersPage = () => {
           cards:card_id(*)
         `)
         .eq('user_id', selectedSeller)
-        .eq('for_trade', true);
+        .eq('for_trade', true); // Only get cards marked for trade
         
       if (error) throw error;
       
