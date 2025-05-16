@@ -48,6 +48,9 @@ interface Seller {
   rating: number;
   matchingCards?: number;
   subscriptionType?: string;
+  // Add these properties to make Seller compatible with ChatInterface
+  name?: string;
+  avatar?: string;
 }
 
 const SellersPage = () => {
@@ -77,7 +80,11 @@ const SellersPage = () => {
         avatar_url: profile.avatar_url,
         location: profile.location,
         rating: profile.rating || 5.0,
-        subscriptionType: profile.subscription_type || 'free',
+        // Use optional chaining and type casting for custom fields that may not exist in the database
+        subscriptionType: (profile as any).subscription_type || 'free',
+        // Add name and avatar for ChatInterface compatibility
+        name: profile.username || 'Usuario sin nombre',
+        avatar: profile.avatar_url,
       }));
     },
     enabled: isAuthenticated // Only run query if user is authenticated
@@ -263,7 +270,14 @@ const SellersPage = () => {
         {showChat && activeSeller && (
           <Dialog open={showChat} onOpenChange={setShowChat} modal={false}>
             <DialogContent className="sm:max-w-md p-0">
-              <ChatInterface seller={activeSeller} onClose={() => setShowChat(false)} />
+              <ChatInterface 
+                seller={{
+                  id: activeSeller.id,
+                  name: activeSeller.username || activeSeller.name || '',
+                  avatar: activeSeller.avatar_url || activeSeller.avatar || ''
+                }} 
+                onClose={() => setShowChat(false)} 
+              />
             </DialogContent>
           </Dialog>
         )}
