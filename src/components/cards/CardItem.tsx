@@ -23,7 +23,7 @@ interface CardItemProps {
   set: string;
   imageUrl: string;
   price: number;
-  seller: {
+  seller?: {  // Changed from required to optional
     id: string;
     name: string;
     rating: number;
@@ -119,12 +119,18 @@ const CardItem = ({
         </div>
       </CardContent>
       <CardFooter className="p-3 pt-0 flex justify-between items-center">
-        <Link 
-          to={`/sellers/${seller.id}`}
-          className="text-xs text-muted-foreground hover:text-foreground"
-        >
-          {seller.name}
-        </Link>
+        {seller ? (
+          <Link 
+            to={`/sellers/${seller.id}`}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            {seller.name}
+          </Link>
+        ) : (
+          <span className="text-xs text-muted-foreground">
+            Sin vendedor
+          </span>
+        )}
         <span className="font-bold">
           ${price.toLocaleString()}
         </span>

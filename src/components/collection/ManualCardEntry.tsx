@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -133,7 +132,8 @@ const ManualCardEntry = ({ onSuccess }: ManualCardEntryProps) => {
         // Card doesn't exist yet, we should fetch it from Scryfall and insert it
         // This is a simplified version - in a real app, you'd call Scryfall API
         
-        // For now, just create a placeholder card
+        // For now, just create a placeholder card with a generated scryfall_id
+        const generatedId = `placeholder-${Date.now()}`;
         const { data: newCard, error: insertError } = await supabase
           .from('cards')
           .insert({
@@ -142,6 +142,7 @@ const ManualCardEntry = ({ onSuccess }: ManualCardEntryProps) => {
             set_code: 'unknown', // In a real app, get this from Scryfall
             collector_number: '1', // In a real app, get this from Scryfall
             rarity: 'common', // In a real app, get this from Scryfall
+            scryfall_id: generatedId, // Add required scryfall_id field
           })
           .select('id')
           .single();

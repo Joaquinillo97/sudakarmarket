@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Card,
@@ -178,6 +177,9 @@ const BulkImport = ({ onSuccess }: BulkImportProps) => {
         
         if (!existingCard) {
           // Card doesn't exist yet, create it
+          // Generate a placeholder scryfall_id
+          const generatedId = `placeholder-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+          
           const { data: newCard, error: insertError } = await supabase
             .from('cards')
             .insert({
@@ -186,6 +188,7 @@ const BulkImport = ({ onSuccess }: BulkImportProps) => {
               set_code: 'unknown',
               collector_number: '1',
               rarity: 'common',
+              scryfall_id: generatedId, // Add required field
             })
             .select('id')
             .single();
@@ -201,7 +204,7 @@ const BulkImport = ({ onSuccess }: BulkImportProps) => {
         }
         
         // Add the card to the user's inventory
-        const { error: inventoryError } = await supabase
+        await supabase
           .from('user_inventory')
           .insert({
             user_id: user.id,
@@ -212,10 +215,6 @@ const BulkImport = ({ onSuccess }: BulkImportProps) => {
             price: card.price,
             for_trade: true // Default to available for trade
           });
-          
-        if (inventoryError) {
-          console.error("Error adding card to inventory:", inventoryError);
-        }
       }
       
       toast.success(`${importedData.length} cartas importadas correctamente`);
