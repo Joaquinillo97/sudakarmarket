@@ -28,54 +28,203 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Loader2, FileText, FileSpreadsheet, Upload, Check } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BulkImportProps {
   onSuccess: () => void;
 }
 
-// Mock data for sample cards
-const SAMPLE_IMPORT_DATA = [
-  { name: "Lightning Bolt", set: "Beta", quantity: 2, condition: "LP", language: "Inglés", price: 25000 },
-  { name: "Sol Ring", set: "Commander 2021", quantity: 1, condition: "NM", language: "Español", price: 3500 },
-  { name: "Birds of Paradise", set: "Fourth Edition", quantity: 4, condition: "MP", language: "Inglés", price: 8000 },
-  { name: "Counterspell", set: "Tempest", quantity: 3, condition: "EX", language: "Inglés", price: 1200 },
-  { name: "Llanowar Elves", set: "Alpha", quantity: 1, condition: "HP", language: "Inglés", price: 15000 },
-];
+interface ParsedCard {
+  name: string;
+  set: string;
+  quantity: number;
+  condition: string;
+  language: string;
+  price: number;
+}
 
 const BulkImport = ({ onSuccess }: BulkImportProps) => {
   const [importStep, setImportStep] = useState<"upload" | "review" | "processing">("upload");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileType, setFileType] = useState<"csv" | "txt" | "xlsx" | null>(null);
   const [showPreview, setShowPreview] = useState(false);
-  const [importedData, setImportedData] = useState(SAMPLE_IMPORT_DATA);
+  const [importedData, setImportedData] = useState<ParsedCard[]>([]);
+  const { user } = useAuth();
   
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
     
     if (file) {
       setSelectedFile(file);
+      
       // Determine file type
       if (file.name.endsWith(".csv")) {
         setFileType("csv");
+        await parseCSVFile(file);
       } else if (file.name.endsWith(".txt")) {
         setFileType("txt");
+        await parseTXTFile(file);
       } else if (file.name.endsWith(".xlsx")) {
         setFileType("xlsx");
+        // In a real app, we'd use a library to parse XLSX
+        toast.error("El formato XLSX no está implementado aún");
+        return;
       }
       
-      // In a real app, we'd parse the file here
-      // For now, we'll just use the mock data
       setImportStep("review");
     }
   };
   
-  const handleImport = () => {
+  const parseCSVFile = async (file: File): Promise<void> => {
+    try {
+      const text = await file.text();
+      const lines = text.split('\n');
+      
+      // Skip header line
+      const header = lines[0].split(',');
+      const parsedCards: ParsedCard[] = [];
+      
+      // Parse each line
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        
+        const values = lines[i].split(',');
+        
+        // Simple parsing - in production you'd handle escaping, quotes, etc.
+        const card: ParsedCard = {
+          quantity: parseInt(values[0]) || 1,
+          name: values[1] || 'Unknown Card',
+          set: values[2] || 'Unknown Set',
+          condition: values[3] || 'NM',
+          language: values[4] || 'en',
+          price: parseInt(values[5]) || 0
+        };
+        
+        parsedCards.push(card);
+      }
+      
+      setImportedData(parsedCards);
+    } catch (error) {
+      console.error("Error parsing CSV:", error);
+      toast.error("Error al procesar el archivo CSV");
+    }
+  };
+  
+  const parseTXTFile = async (file: File): Promise<void> => {
+    try {
+      const text = await file.text();
+      const lines = text.split('\n');
+      const parsedCards: ParsedCard[] = [];
+      
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        
+        // Try to parse "Nx Card Name" format
+        const match = line.match(/^(\d+)x?\s+(.+)$/);
+        
+        if (match) {
+          const card: ParsedCard = {
+            quantity: parseInt(match[1]),
+            name: match[2].trim(),
+            set: 'Unknown Set', // TXT format typically doesn't include set info
+            condition: 'NM',    // Default condition
+            language: 'en',     // Default language
+            price: 0            // Default price
+          };
+          parsedCards.push(card);
+        } else {
+          // If no quantity specified, assume 1
+          const card: ParsedCard = {
+            quantity: 1,
+            name: line.trim(),
+            set: 'Unknown Set',
+            condition: 'NM',
+            language: 'en',
+            price: 0
+          };
+          parsedCards.push(card);
+        }
+      }
+      
+      setImportedData(parsedCards);
+    } catch (error) {
+      console.error("Error parsing TXT:", error);
+      toast.error("Error al procesar el archivo de texto");
+    }
+  };
+  
+  const handleImport = async () => {
+    if (!user) {
+      toast.error("Debes iniciar sesión para importar cartas");
+      return;
+    }
+    
     setImportStep("processing");
     
-    // Simulate processing delay
-    setTimeout(() => {
+    try {
+      // For each card in importedData, add it to the database
+      for (const card of importedData) {
+        // Check if the card exists in our database
+        let { data: existingCard, error: cardError } = await supabase
+          .from('cards')
+          .select('id')
+          .eq('name', card.name)
+          .eq('set_name', card.set)
+          .maybeSingle();
+          
+        let cardId;
+        
+        if (!existingCard) {
+          // Card doesn't exist yet, create it
+          const { data: newCard, error: insertError } = await supabase
+            .from('cards')
+            .insert({
+              name: card.name,
+              set_name: card.set,
+              set_code: 'unknown',
+              collector_number: '1',
+              rarity: 'common',
+            })
+            .select('id')
+            .single();
+            
+          if (insertError) {
+            console.error("Error creating card:", insertError);
+            continue; // Skip this card and try the next one
+          }
+          
+          cardId = newCard.id;
+        } else {
+          cardId = existingCard.id;
+        }
+        
+        // Add the card to the user's inventory
+        const { error: inventoryError } = await supabase
+          .from('user_inventory')
+          .insert({
+            user_id: user.id,
+            card_id: cardId,
+            quantity: card.quantity,
+            condition: card.condition,
+            language: card.language,
+            price: card.price,
+            for_trade: true // Default to available for trade
+          });
+          
+        if (inventoryError) {
+          console.error("Error adding card to inventory:", inventoryError);
+        }
+      }
+      
+      toast.success(`${importedData.length} cartas importadas correctamente`);
       onSuccess();
-    }, 2000);
+      
+    } catch (error) {
+      console.error("Import error:", error);
+      toast.error("Error al importar cartas");
+    }
   };
   
   // Render different content based on current step

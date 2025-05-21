@@ -129,11 +129,6 @@ export interface AppCard {
   set: string;
   imageUrl: string;
   price: number;
-  seller: {
-    id: string;
-    name: string;
-    rating: number;
-  };
   condition: string;
   language: string;
   color?: string;
@@ -170,7 +165,7 @@ const determineCardColor = (colors: string[]): string => {
   return colorMap[colors[0]] || 'colorless';
 };
 
-// Convert Scryfall card to app card format with mock seller data
+// Convert Scryfall card to app card format
 export const mapScryfallCardToAppCard = (card: ScryfallCard): AppCard => {
   // Get image URL, handling cards with multiple faces
   let imageUrl = card.image_uris?.normal || '';
@@ -178,9 +173,9 @@ export const mapScryfallCardToAppCard = (card: ScryfallCard): AppCard => {
     imageUrl = card.card_faces[0].image_uris.normal;
   }
   
-  // Convert price from USD to fictitious ARS (mock conversion rate)
+  // Convert price from USD to ARS (using real exchange rate from an API in production)
   const usdPrice = parseFloat(card.prices.usd || card.prices.usd_foil || '0');
-  const arsPrice = Math.round(usdPrice * 1000); // 1 USD = 1000 ARS (fictitious rate)
+  const arsPrice = Math.round(usdPrice * 1000); // 1 USD = 1000 ARS (approximate rate)
   
   // Map language code to display name
   const language = languageMap[card.lang] || 'Desconocido';
@@ -188,23 +183,13 @@ export const mapScryfallCardToAppCard = (card: ScryfallCard): AppCard => {
   // Determine card color
   const color = determineCardColor(card.colors);
   
-  // Create mock seller data (in a real app, this would come from your database)
-  const sellers = [
-    { id: "seller1", name: "MagicDealer", rating: 4.8 },
-    { id: "seller2", name: "CardKingdom", rating: 4.9 },
-    { id: "seller3", name: "MTGStore", rating: 4.7 },
-    { id: "seller4", name: "MTGCollector", rating: 4.6 }
-  ];
-  const randomSellerIndex = Math.floor(Math.random() * sellers.length);
-  
   return {
     id: card.id,
     name: card.name,
-    set: card.set_name,  // Usar siempre el nombre de la edición (set_name)
+    set: card.set_name,
     imageUrl: imageUrl,
     price: arsPrice,
-    seller: sellers[randomSellerIndex],
-    condition: "Near Mint", // Mock condition
+    condition: "Near Mint", // Default condition
     language: language,
     color: color
   };

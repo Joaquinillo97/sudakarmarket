@@ -8,7 +8,7 @@ interface Card {
   set: string;
   imageUrl: string;
   price: number;
-  seller: {
+  seller?: {
     id: string;
     name: string;
     rating: number;

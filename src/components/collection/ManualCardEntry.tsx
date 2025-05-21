@@ -17,37 +17,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { getAutocompleteSuggestions } from "@/services/scryfall";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
-// Mock data for card names autocomplete
-const MOCK_CARD_NAMES = [
-  "Lightning Bolt",
-  "Sol Ring",
-  "Birds of Paradise",
-  "Llanowar Elves",
-  "Counterspell",
-  "Dark Ritual",
-  "Swords to Plowshares",
-  "Path to Exile",
-  "Brainstorm",
-  "Demonic Tutor",
-];
-
-// Mock data for card sets
-const MOCK_CARD_SETS = [
-  "Alpha",
-  "Beta",
-  "Unlimited",
-  "Revised",
-  "Fourth Edition",
-  "Fifth Edition",
-  "Ice Age",
-  "Tempest",
-  "Urza's Saga",
-  "Modern Horizons",
-  "Dominaria United",
-];
-
-// Mock data for card conditions
+// Card conditions
 const CARD_CONDITIONS = [
   { label: "Mint (M)", value: "M" },
   { label: "Near Mint (NM)", value: "NM" },
@@ -58,7 +33,7 @@ const CARD_CONDITIONS = [
   { label: "Poor (PR)", value: "PR" },
 ];
 
-// Mock data for card languages
+// Card languages
 const CARD_LANGUAGES = [
   { label: "Español", value: "es" },
   { label: "Inglés", value: "en" },
@@ -92,8 +67,10 @@ interface ManualCardEntryProps {
 
 const ManualCardEntry = ({ onSuccess }: ManualCardEntryProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [filteredCards, setFilteredCards] = useState<string[]>(MOCK_CARD_NAMES);
+  const [filteredCards, setFilteredCards] = useState<string[]>([]);
+  const [cardSets, setCardSets] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const { user } = useAuth();
 
   const form = useForm<CardFormValues>({
     resolver: zodResolver(cardFormSchema),
@@ -109,13 +86,15 @@ const ManualCardEntry = ({ onSuccess }: ManualCardEntryProps) => {
   });
 
   // Filter cards based on input
-  const handleNameChange = (value: string) => {
-    if (value.length > 0) {
-      const filtered = MOCK_CARD_NAMES.filter(name =>
-        name.toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredCards(filtered);
-      setShowSuggestions(true);
+  const handleNameChange = async (value: string) => {
+    if (value.length >= 2) {
+      try {
+        const suggestions = await getAutocompleteSuggestions(value);
+        setFilteredCards(suggestions);
+        setShowSuggestions(true);
+      } catch (error) {
+        console.error("Error fetching card suggestions:", error);
+      }
     } else {
       setFilteredCards([]);
       setShowSuggestions(false);
@@ -125,17 +104,83 @@ const ManualCardEntry = ({ onSuccess }: ManualCardEntryProps) => {
   const selectSuggestion = (card: string) => {
     form.setValue("name", card);
     setShowSuggestions(false);
+    
+    // Fetch sets that contain this card
+    // In a real implementation, we would query Scryfall for sets containing this card
+    // For now, we'll just close the suggestions
   };
 
-  const onSubmit = (data: CardFormValues) => {
+  const onSubmit = async (data: CardFormValues) => {
+    if (!user) {
+      toast.error("Debes iniciar sesión para agregar cartas");
+      return;
+    }
+    
     setIsSubmitting(true);
     
-    // Simulate API call with 1 second delay
-    setTimeout(() => {
-      console.log("Card added:", data);
-      setIsSubmitting(false);
+    try {
+      // First check if the card exists in our database
+      let { data: existingCard, error: cardError } = await supabase
+        .from('cards')
+        .select('id')
+        .eq('name', data.name)
+        .eq('set_name', data.set)
+        .single();
+        
+      let cardId;
+      
+      if (cardError || !existingCard) {
+        // Card doesn't exist yet, we should fetch it from Scryfall and insert it
+        // This is a simplified version - in a real app, you'd call Scryfall API
+        
+        // For now, just create a placeholder card
+        const { data: newCard, error: insertError } = await supabase
+          .from('cards')
+          .insert({
+            name: data.name,
+            set_name: data.set,
+            set_code: 'unknown', // In a real app, get this from Scryfall
+            collector_number: '1', // In a real app, get this from Scryfall
+            rarity: 'common', // In a real app, get this from Scryfall
+          })
+          .select('id')
+          .single();
+          
+        if (insertError) {
+          throw insertError;
+        }
+        
+        cardId = newCard.id;
+      } else {
+        cardId = existingCard.id;
+      }
+      
+      // Now add the card to the user's inventory
+      const { error: inventoryError } = await supabase
+        .from('user_inventory')
+        .insert({
+          user_id: user.id,
+          card_id: cardId,
+          quantity: data.quantity,
+          condition: data.condition,
+          language: data.language,
+          price: data.price,
+          for_trade: data.forTrade
+        });
+        
+      if (inventoryError) {
+        throw inventoryError;
+      }
+      
+      toast.success("Carta agregada correctamente");
       onSuccess();
-    }, 1000);
+      
+    } catch (error) {
+      console.error("Error adding card:", error);
+      toast.error("Error al agregar la carta");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -192,18 +237,12 @@ const ManualCardEntry = ({ onSuccess }: ManualCardEntryProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Edición</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecciona la edición" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {MOCK_CARD_SETS.map((set) => (
-                            <SelectItem key={set} value={set}>{set}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          placeholder="Ej: Commander Legends"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
