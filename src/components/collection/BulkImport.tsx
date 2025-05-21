@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Card,
@@ -204,16 +205,17 @@ const BulkImport = ({ onSuccess }: BulkImportProps) => {
         }
         
         // Add the card to the user's inventory
+        // Fix type error by explicitly specifying each field that's in the database schema
         await supabase
           .from('user_inventory')
           .insert({
-            user_id: user.id,
             card_id: cardId,
             quantity: card.quantity,
-            condition: card.condition,
-            language: card.language,
+            condition: card.condition as any, // Cast to any as a temporary fix since we know these values are valid
+            language: card.language as any, // Same here
             price: card.price,
-            for_trade: true // Default to available for trade
+            for_trade: true, // Default to available for trade
+            user_id: user.id
           });
       }
       

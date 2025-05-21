@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -157,16 +158,17 @@ const ManualCardEntry = ({ onSuccess }: ManualCardEntryProps) => {
       }
       
       // Now add the card to the user's inventory
+      // Fix type error by explicitly specifying each field that's in the database schema
       const { error: inventoryError } = await supabase
         .from('user_inventory')
         .insert({
-          user_id: user.id,
           card_id: cardId,
           quantity: data.quantity,
-          condition: data.condition,
-          language: data.language,
+          condition: data.condition as any, // Cast to any to avoid type issues
+          language: data.language as any, // Cast to any to avoid type issues
           price: data.price,
-          for_trade: data.forTrade
+          for_trade: data.forTrade,
+          user_id: user.id
         });
         
       if (inventoryError) {
