@@ -17,10 +17,10 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
   signUp: (email: string, password: string, username: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 // Create the context with a default value
@@ -114,31 +114,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     }
   };
-
-  // Sign in with Google
-  const signInWithGoogle = async () => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-          redirectTo: window.location.origin,
-        },
-      });
-      
-      if (error) throw error;
-      // Success toast not needed here as the page will redirect to Google
-    } catch (error: any) {
-      console.error("Google sign in failed", error);
-      toast.error("Error al iniciar sesión con Google: " + error.message);
-      setIsLoading(false);
-      throw error;
-    }
-  };
   
   // Sign up with email, password and username
   const signUp = async (email: string, password: string, username: string) => {
@@ -172,6 +147,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error: any) {
       console.error("Sign up failed", error);
       toast.error("Error al registrarse: " + error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Reset password
+  const resetPassword = async (email: string) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?reset=true`,
+      });
+      
+      if (error) throw error;
+      toast.success("Se ha enviado un correo para restablecer tu contraseña");
+    } catch (error: any) {
+      console.error("Password reset failed", error);
+      toast.error("Error al enviar el correo: " + error.message);
       throw error;
     } finally {
       setIsLoading(false);
@@ -231,8 +225,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         isAuthenticated: !!user,
         signIn,
-        signInWithGoogle,
         signUp,
+        resetPassword,
         signOut,
         updateProfile
       }}
