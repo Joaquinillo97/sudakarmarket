@@ -31,29 +31,76 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
-  // Check for existing session on mount
+  // Check for existing session on mount and setup auth state listener
   useEffect(() => {
+    // Set up auth state change listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth state change event:", event);
+        
+        if (event === 'SIGNED_IN' && session) {
+          console.log("Setting user from session:", session.user.id);
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('id, email, username, avatar_url')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (profile) {
+              setUser({
+                id: profile.id,
+                email: profile.email,
+                username: profile.username,
+                avatar_url: profile.avatar_url
+              });
+            } else {
+              // If no profile, just set the basic user info
+              setUser({
+                id: session.user.id,
+                email: session.user.email || '',
+              });
+            }
+          } catch (error) {
+            console.error("Error fetching user profile:", error);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          console.log("User signed out");
+        }
+      }
+    );
+    
+    // THEN check for existing session
     const checkSession = async () => {
       try {
-        setIsLoading(true);
-        
-        // Get current session from Supabase
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id, email, username, avatar_url')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profile) {
-            setUser({
-              id: profile.id,
-              email: profile.email,
-              username: profile.username,
-              avatar_url: profile.avatar_url
-            });
+          console.log("Found existing session:", session.user.id);
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('id, email, username, avatar_url')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (profile) {
+              setUser({
+                id: profile.id,
+                email: profile.email,
+                username: profile.username,
+                avatar_url: profile.avatar_url
+              });
+            } else {
+              // If no profile found, just use the session data
+              setUser({
+                id: session.user.id,
+                email: session.user.email || '',
+              });
+            }
+          } catch (error) {
+            console.error("Error fetching user profile:", error);
           }
         }
       } catch (error) {
@@ -65,30 +112,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     checkSession();
     
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id, email, username, avatar_url')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profile) {
-            setUser({
-              id: profile.id,
-              email: profile.email,
-              username: profile.username,
-              avatar_url: profile.avatar_url
-            });
-          }
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-        }
-      }
-    );
-    
     // Clean up subscription on unmount
     return () => {
       subscription.unsubscribe();
@@ -99,13 +122,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log("Attempting sign in with email:", email);
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
       if (error) throw error;
-      toast.success("¡Inicio de sesión exitoso!");
+      console.log("Sign in successful", data);
     } catch (error: any) {
       console.error("Sign in failed", error);
       toast.error("Error al iniciar sesión: " + error.message);
@@ -120,11 +144,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       // Check if username already exists
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error: checkError } = await supabase
         .from('profiles')
         .select('username')
         .eq('username', username)
-        .single();
+        .maybeSingle();
+        
+      if (checkError) {
+        console.error("Error checking username:", checkError);
+      }
         
       if (existingUser) {
         throw new Error("El nombre de usuario ya está en uso");
@@ -142,8 +170,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       
       if (error) throw error;
-      
-      toast.success("¡Registro exitoso! Verifica tu correo electrónico.");
+      console.log("Sign up successful", data);
     } catch (error: any) {
       console.error("Sign up failed", error);
       toast.error("Error al registrarse: " + error.message);
@@ -162,7 +189,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       
       if (error) throw error;
-      toast.success("Se ha enviado un correo para restablecer tu contraseña");
     } catch (error: any) {
       console.error("Password reset failed", error);
       toast.error("Error al enviar el correo: " + error.message);

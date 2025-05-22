@@ -1,11 +1,12 @@
 
-import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
+import { toast } from "sonner";
 
 const AuthPage = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -17,11 +18,21 @@ const AuthPage = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const { signIn, signUp, resetPassword, isAuthenticated } = useAuth();
+  const { signIn, signUp, resetPassword, isAuthenticated, isLoading: authLoading } = useAuth();
+  const location = useLocation();
 
-  // Redirect if already logged in
+  // Check for redirect state
+  useEffect(() => {
+    // Reset states when form type changes
+    setErrorMessage("");
+    setSuccessMessage("");
+  }, [isSignUp, isForgotPassword]);
+
+  // If we're already authenticated, redirect to the home page
+  // or to the page the user was trying to access before authentication
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    const from = location.state?.from || "/";
+    return <Navigate to={from} replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,17 +45,23 @@ const AuthPage = () => {
       if (isForgotPassword) {
         await resetPassword(email);
         setSuccessMessage("Se ha enviado un correo para restablecer tu contraseña");
+        toast.success("Email de recuperación enviado");
       } else if (isSignUp) {
         // Validate username
         if (!username.trim()) {
           throw new Error("El nombre de usuario es requerido");
         }
         await signUp(email, password, username);
+        toast.success("Registro exitoso, puedes iniciar sesión");
+        setIsSignUp(false); // Switch to login form after successful signup
       } else {
         await signIn(email, password);
+        toast.success("Inicio de sesión exitoso");
       }
     } catch (error: any) {
-      setErrorMessage(error.message || "Ocurrió un error durante la autenticación");
+      const errorMsg = error.message || "Ocurrió un error durante la autenticación";
+      setErrorMessage(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -55,6 +72,18 @@ const AuthPage = () => {
     setErrorMessage("");
     setSuccessMessage("");
   };
+
+  // Show a global loading state if the auth system is still initializing
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader className="h-10 w-10 animate-spin text-mtg-orange" />
+          <p className="text-lg">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
