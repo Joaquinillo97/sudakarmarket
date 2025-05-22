@@ -1,12 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
-import { toast } from "sonner";
 
 const AuthPage = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -14,12 +13,15 @@ const AuthPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   const { signIn, signUp, resetPassword, isAuthenticated, isLoading: authLoading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  console.log("AuthPage rendered", { isAuthenticated, authLoading });
 
   // Check for redirect state
   useEffect(() => {
@@ -30,40 +32,40 @@ const AuthPage = () => {
 
   // If we're already authenticated, redirect to the home page
   // or to the page the user was trying to access before authentication
-  if (isAuthenticated) {
-    const from = location.state?.from || "/";
-    return <Navigate to={from} replace />;
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log("User is authenticated, redirecting");
+      const from = location.state?.from || "/";
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, location.state, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
     setSuccessMessage("");
-    setIsLoading(true);
+    setIsSubmitting(true);
 
     try {
       if (isForgotPassword) {
         await resetPassword(email);
         setSuccessMessage("Se ha enviado un correo para restablecer tu contraseña");
-        toast.success("Email de recuperación enviado");
       } else if (isSignUp) {
         // Validate username
         if (!username.trim()) {
           throw new Error("El nombre de usuario es requerido");
         }
         await signUp(email, password, username);
-        toast.success("Registro exitoso, puedes iniciar sesión");
         setIsSignUp(false); // Switch to login form after successful signup
       } else {
         await signIn(email, password);
-        toast.success("Inicio de sesión exitoso");
+        // Don't need to navigate here - the auth state change will trigger a redirect
       }
     } catch (error: any) {
       const errorMsg = error.message || "Ocurrió un error durante la autenticación";
       setErrorMessage(errorMsg);
-      toast.error(errorMsg);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -83,6 +85,11 @@ const AuthPage = () => {
         </div>
       </div>
     );
+  }
+
+  // If we're already authenticated but still on this page, redirect
+  if (isAuthenticated) {
+    return null; // Return null while the useEffect handles redirection
   }
 
   return (
@@ -115,7 +122,7 @@ const AuthPage = () => {
                   placeholder="Nombre de usuario"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                   required
                 />
               </div>
@@ -128,7 +135,7 @@ const AuthPage = () => {
                 placeholder="tu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                disabled={isSubmitting}
                 required
               />
             </div>
@@ -143,7 +150,7 @@ const AuthPage = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                   required
                 />
               </div>
@@ -160,10 +167,10 @@ const AuthPage = () => {
             <Button
               type="submit"
               className="w-full"
-              disabled={isLoading}
-              aria-disabled={isLoading}
+              disabled={isSubmitting}
+              aria-disabled={isSubmitting}
             >
-              {isLoading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
               {isForgotPassword 
                 ? "Recuperar contraseña" 
                 : isSignUp 
@@ -178,7 +185,7 @@ const AuthPage = () => {
                 type="button"
                 className="text-sm text-mtg-orange hover:underline"
                 onClick={handleToggleForgotPassword}
-                disabled={isLoading}
+                disabled={isSubmitting}
               >
                 ¿Olvidaste tu contraseña?
               </button>
@@ -190,7 +197,7 @@ const AuthPage = () => {
                   type="button"
                   className="font-medium text-mtg-orange hover:underline"
                   onClick={handleToggleForgotPassword}
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 >
                   Volver al inicio de sesión
                 </button>
@@ -202,7 +209,7 @@ const AuthPage = () => {
                   type="button"
                   className="font-medium text-mtg-orange hover:underline"
                   onClick={() => setIsSignUp(false)}
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 >
                   Iniciar sesión
                 </button>
@@ -214,7 +221,7 @@ const AuthPage = () => {
                   type="button"
                   className="font-medium text-mtg-orange hover:underline"
                   onClick={() => setIsSignUp(true)}
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 >
                   Registrarme
                 </button>

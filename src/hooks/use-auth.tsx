@@ -33,106 +33,127 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
   // Check for existing session on mount and setup auth state listener
   useEffect(() => {
-    // Set up auth state change listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Auth state change event:", event);
-        
-        if (event === 'SIGNED_IN' && session) {
-          console.log("Setting user from session:", session.user.id);
-          try {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('id, email, username, avatar_url')
-              .eq('id', session.user.id)
-              .single();
-            
-            if (profile) {
-              setUser({
-                id: profile.id,
-                email: profile.email,
-                username: profile.username,
-                avatar_url: profile.avatar_url
-              });
-            } else {
-              // If no profile, just set the basic user info
-              setUser({
-                id: session.user.id,
-                email: session.user.email || '',
-              });
-            }
-          } catch (error) {
-            console.error("Error fetching user profile:", error);
-          }
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-          console.log("User signed out");
-        }
-      }
-    );
+    console.log("AuthProvider initialized");
+    let mounted = true;
     
-    // THEN check for existing session
-    const checkSession = async () => {
+    // Simplify the auth state check to prevent potential deadlocks
+    const setupAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session) {
-          console.log("Found existing session:", session.user.id);
-          try {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('id, email, username, avatar_url')
-              .eq('id', session.user.id)
-              .single();
+        // First set up the auth state change listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event, session) => {
+            console.log("Auth state change event:", event);
             
-            if (profile) {
-              setUser({
-                id: profile.id,
-                email: profile.email,
-                username: profile.username,
-                avatar_url: profile.avatar_url
-              });
-            } else {
-              // If no profile found, just use the session data
+            if (!mounted) return;
+            
+            if (session) {
+              console.log("User from session:", session.user.id);
+              // Basic user info from session
               setUser({
                 id: session.user.id,
                 email: session.user.email || '',
               });
+              
+              // We'll fetch profile data separately
+              if (event === 'SIGNED_IN') {
+                setTimeout(() => {
+                  fetchUserProfile(session.user.id);
+                }, 0);
+              }
+            } else if (event === 'SIGNED_OUT') {
+              setUser(null);
+              console.log("User signed out");
             }
-          } catch (error) {
-            console.error("Error fetching user profile:", error);
           }
+        );
+        
+        // Then check for existing session
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Getting initial session:", session ? "Session found" : "No session");
+        
+        if (session && mounted) {
+          // Set basic user data immediately
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+          });
+          
+          // Fetch additional profile data
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 0);
+        }
+        
+        // Always set loading to false once we've checked
+        if (mounted) {
+          setIsLoading(false);
         }
       } catch (error) {
-        console.error("Session check failed", error);
-      } finally {
-        setIsLoading(false);
+        console.error("Auth initialization error:", error);
+        if (mounted) setIsLoading(false);
       }
+      
+      return () => {
+        mounted = false;
+        if (subscription) {
+          subscription.unsubscribe();
+        }
+      };
     };
     
-    checkSession();
-    
-    // Clean up subscription on unmount
-    return () => {
-      subscription.unsubscribe();
-    };
+    setupAuth();
   }, []);
+  
+  // Fetch user profile data from profiles table
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      console.log("Fetching user profile for:", userId);
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('id, email, username, avatar_url')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching profile:", error);
+        return;
+      }
+      
+      if (profile) {
+        console.log("User profile fetched successfully");
+        setUser({
+          id: profile.id,
+          email: profile.email,
+          username: profile.username,
+          avatar_url: profile.avatar_url
+        });
+      }
+    } catch (error) {
+      console.error("Error in fetchUserProfile:", error);
+    }
+  };
   
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
       console.log("Attempting sign in with email:", email);
-      const { error, data } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
-      if (error) throw error;
-      console.log("Sign in successful", data);
+      if (error) {
+        console.error("Sign in failed:", error.message);
+        toast.error("Error al iniciar sesión: " + error.message);
+        throw error;
+      }
+      console.log("Sign in successful");
+      toast.success("Inicio de sesión exitoso");
+      return;
     } catch (error: any) {
-      console.error("Sign in failed", error);
-      toast.error("Error al iniciar sesión: " + error.message);
+      console.error("Sign in error:", error);
+      toast.error("Error al iniciar sesión: " + (error.message || "Error desconocido"));
       throw error;
     } finally {
       setIsLoading(false);
@@ -155,11 +176,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
         
       if (existingUser) {
+        toast.error("El nombre de usuario ya está en uso");
         throw new Error("El nombre de usuario ya está en uso");
       }
       
       // Register user with Supabase Auth
-      const { error, data } = await supabase.auth.signUp({ 
+      const { error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
@@ -169,11 +191,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       });
       
-      if (error) throw error;
-      console.log("Sign up successful", data);
+      if (error) {
+        console.error("Sign up error:", error.message);
+        toast.error("Error al registrarse: " + error.message);
+        throw error;
+      }
+      console.log("Sign up successful");
+      toast.success("Registro exitoso, puedes iniciar sesión");
     } catch (error: any) {
-      console.error("Sign up failed", error);
-      toast.error("Error al registrarse: " + error.message);
+      console.error("Sign up error:", error);
+      toast.error("Error al registrarse: " + (error.message || "Error desconocido"));
       throw error;
     } finally {
       setIsLoading(false);
@@ -188,10 +215,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         redirectTo: `${window.location.origin}/auth?reset=true`,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Password reset failed:", error.message);
+        toast.error("Error al enviar el correo: " + error.message);
+        throw error;
+      }
+      
+      toast.success("Se ha enviado un correo para restablecer tu contraseña");
     } catch (error: any) {
-      console.error("Password reset failed", error);
-      toast.error("Error al enviar el correo: " + error.message);
+      console.error("Password reset error:", error);
+      toast.error("Error al enviar el correo: " + (error.message || "Error desconocido"));
       throw error;
     } finally {
       setIsLoading(false);
@@ -203,11 +236,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error("Sign out error:", error.message);
+        toast.error("Error al cerrar sesión: " + error.message);
+        throw error;
+      }
       toast.success("Has cerrado sesión");
     } catch (error: any) {
-      console.error("Sign out failed", error);
-      toast.error("Error al cerrar sesión: " + error.message);
+      console.error("Sign out error:", error);
+      toast.error("Error al cerrar sesión: " + (error.message || "Error desconocido"));
       throw error;
     } finally {
       setIsLoading(false);
@@ -216,7 +253,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
   // Update user profile
   const updateProfile = async (data: Partial<User>) => {
-    if (!user) throw new Error("Usuario no autenticado");
+    if (!user) {
+      toast.error("Usuario no autenticado");
+      throw new Error("Usuario no autenticado");
+    }
     
     setIsLoading(true);
     try {
@@ -230,14 +270,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .update(updates)
         .eq('id', user.id);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Profile update error:", error.message);
+        toast.error("Error al actualizar el perfil: " + error.message);
+        throw error;
+      }
       
       // Update local state
       setUser(prev => prev ? { ...prev, ...data } : null);
       toast.success("Perfil actualizado correctamente");
     } catch (error: any) {
-      console.error("Profile update failed", error);
-      toast.error("Error al actualizar el perfil: " + error.message);
+      console.error("Profile update error:", error);
+      toast.error("Error al actualizar el perfil: " + (error.message || "Error desconocido"));
       throw error;
     } finally {
       setIsLoading(false);
