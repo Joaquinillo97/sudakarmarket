@@ -88,20 +88,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (mounted) {
           setIsLoading(false);
         }
+        
+        // Return cleanup function
+        return () => {
+          mounted = false;
+          if (subscription) {
+            subscription.unsubscribe();
+          }
+        };
       } catch (error) {
         console.error("Auth initialization error:", error);
         if (mounted) setIsLoading(false);
       }
-      
-      return () => {
-        mounted = false;
-        if (subscription) {
-          subscription.unsubscribe();
-        }
-      };
     };
     
-    setupAuth();
+    // Execute setup and store cleanup function
+    const cleanupPromise = setupAuth();
+    
+    return () => {
+      cleanupPromise.then(cleanup => {
+        if (cleanup) cleanup();
+      });
+    };
   }, []);
   
   // Fetch user profile data from profiles table
