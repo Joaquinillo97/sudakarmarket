@@ -24,7 +24,7 @@ const SellersPage = () => {
   
   // Fetch sellers from Supabase
   const { data: sellers, isLoading, error } = useQuery({
-    queryKey: ['sellers'],
+    queryKey: ['sellers', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
@@ -41,14 +41,13 @@ const SellersPage = () => {
         avatar_url: profile.avatar_url,
         location: profile.location,
         rating: profile.rating || 5.0,
-        // Use type casting for custom fields that may not exist in the database
-        subscriptionType: (profile as any).subscription_type || 'free',
+        subscriptionType: 'free', // Default subscription type
         // Add name and avatar for ChatInterface compatibility
         name: profile.username || 'Usuario sin nombre',
         avatar: profile.avatar_url,
       }));
     },
-    enabled: isAuthenticated // Only run query if user is authenticated
+    enabled: true // Always run, but exclude current user in query
   });
   
   // Fetch seller's cards that are marked for trade

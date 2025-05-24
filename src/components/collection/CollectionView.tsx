@@ -1,5 +1,8 @@
 
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,114 +21,6 @@ import { Card } from "@/components/ui/card";
 import CardGrid from "@/components/cards/CardGrid";
 import { Grid2X2, List, Pencil, Trash } from "lucide-react";
 
-// Mock collection data
-const MOCK_COLLECTION_DATA = [
-  {
-    id: "1",
-    name: "Lightning Bolt",
-    set: "Beta",
-    imageUrl: "https://cards.scryfall.io/normal/front/c/e/ce711943-c1a1-43a0-8b89-8d169cfb8e06.jpg?1628801721",
-    quantity: 2,
-    condition: "LP",
-    language: "Inglés",
-    price: 25000,
-    forTrade: true,
-    color: "red",
-    seller: { id: "self", name: "Mi colección", rating: 5 }
-  },
-  {
-    id: "2",
-    name: "Sol Ring",
-    set: "Commander 2021",
-    imageUrl: "https://cards.scryfall.io/normal/front/4/c/4cbc6901-6a4a-4d0a-83ea-7eefa3b35021.jpg?1625979257",
-    quantity: 1,
-    condition: "NM",
-    language: "Español",
-    price: 3500,
-    forTrade: false,
-    color: "colorless",
-    seller: { id: "self", name: "Mi colección", rating: 5 }
-  },
-  {
-    id: "3",
-    name: "Birds of Paradise",
-    set: "Fourth Edition",
-    imageUrl: "https://cards.scryfall.io/normal/front/f/e/feefe9f0-24a6-461c-9ef1-86c5a6f33b83.jpg?1594681430",
-    quantity: 4,
-    condition: "MP",
-    language: "Inglés",
-    price: 8000,
-    forTrade: true,
-    color: "green",
-    seller: { id: "self", name: "Mi colección", rating: 5 }
-  },
-  {
-    id: "4",
-    name: "Counterspell",
-    set: "Tempest",
-    imageUrl: "https://cards.scryfall.io/normal/front/1/9/1920dae4-fb92-4f19-ae4b-eb3276b8dac7.jpg?1628801663",
-    quantity: 3,
-    condition: "EX",
-    language: "Inglés",
-    price: 1200,
-    forTrade: true,
-    color: "blue",
-    seller: { id: "self", name: "Mi colección", rating: 5 }
-  },
-  {
-    id: "5",
-    name: "Llanowar Elves",
-    set: "Alpha",
-    imageUrl: "https://cards.scryfall.io/normal/front/7/3/73542493-cd0b-4bb7-a5b8-8f889c76e4d6.jpg?1605281272",
-    quantity: 1,
-    condition: "HP",
-    language: "Inglés",
-    price: 15000,
-    forTrade: false,
-    color: "green",
-    seller: { id: "self", name: "Mi colección", rating: 5 }
-  },
-  {
-    id: "6",
-    name: "Swords to Plowshares",
-    set: "Ice Age",
-    imageUrl: "https://cards.scryfall.io/normal/front/0/9/09d3bd04-53f9-4bfd-b244-bb04f0d5a0f3.jpg?1559591605",
-    quantity: 2,
-    condition: "NM",
-    language: "Español",
-    price: 4500,
-    forTrade: true,
-    color: "white",
-    seller: { id: "self", name: "Mi colección", rating: 5 }
-  },
-  {
-    id: "7",
-    name: "Dark Ritual",
-    set: "Revised Edition",
-    imageUrl: "https://cards.scryfall.io/normal/front/e/b/eb168156-0120-4716-9f7c-a04716673b7c.jpg?1559591584",
-    quantity: 3,
-    condition: "MP",
-    language: "Inglés",
-    price: 2200,
-    forTrade: true,
-    color: "black",
-    seller: { id: "self", name: "Mi colección", rating: 5 }
-  },
-  {
-    id: "8",
-    name: "Shock",
-    set: "Onslaught",
-    imageUrl: "https://cards.scryfall.io/normal/front/e/d/edc80177-3809-47e1-a7d4-c9aec300892c.jpg?1562942342",
-    quantity: 4,
-    condition: "NM",
-    language: "Inglés",
-    price: 600,
-    forTrade: false,
-    color: "red",
-    seller: { id: "self", name: "Mi colección", rating: 5 }
-  }
-];
-
 const CollectionView = () => {
   const [view, setView] = useState<"table" | "gallery">("table");
   const [searchTerm, setSearchTerm] = useState("");
@@ -134,9 +29,83 @@ const CollectionView = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Fetch user's collection from database
+  const { data: collectionData = [], isLoading } = useQuery({
+    queryKey: ['userCollection', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('user_inventory')
+        .select(`
+          *,
+          cards:card_id(*)
+        `)
+        .eq('user_id', user.id);
+        
+      if (error) throw error;
+      
+      return data.map((item) => ({
+        id: item.id,
+        name: item.cards?.name || 'Carta sin nombre',
+        set: item.cards?.set_name || 'Set desconocido',
+        imageUrl: item.cards?.image_uri || '',
+        quantity: item.quantity,
+        condition: item.condition,
+        language: item.language,
+        price: item.price,
+        forTrade: item.for_trade,
+        color: "colorless", // Default color
+        seller: { id: user.id, name: "Mi colección", rating: 5 },
+        cardId: item.card_id,
+      }));
+    },
+    enabled: !!user?.id && isAuthenticated
+  });
+
+  // Mutation to update for_trade status
+  const updateForTradeMutation = useMutation({
+    mutationFn: async ({ inventoryId, forTrade }: { inventoryId: string, forTrade: boolean }) => {
+      const { error } = await supabase
+        .from('user_inventory')
+        .update({ for_trade: forTrade })
+        .eq('id', inventoryId)
+        .eq('user_id', user?.id);
+        
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userCollection', user?.id] });
+    }
+  });
+
+  // Mutation to delete card from collection
+  const deleteCardMutation = useMutation({
+    mutationFn: async (inventoryId: string) => {
+      const { error } = await supabase
+        .from('user_inventory')
+        .delete()
+        .eq('id', inventoryId)
+        .eq('user_id', user?.id);
+        
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userCollection', user?.id] });
+      setIsDeleteDialogOpen(false);
+      toast({
+        title: "Carta eliminada",
+        description: `${selectedCard?.name} ha sido eliminada de tu colección`,
+        duration: 3000,
+      });
+    }
+  });
 
   const handleForTradeToggle = (cardId: string, newValue: boolean) => {
-    // In a real app, update the database
+    updateForTradeMutation.mutate({ inventoryId: cardId, forTrade: newValue });
     toast({
       title: newValue ? "Carta disponible para intercambio" : "Carta no disponible para intercambio",
       description: `Has ${newValue ? "activado" : "desactivado"} la carta para intercambios`,
@@ -145,13 +114,9 @@ const CollectionView = () => {
   };
 
   const handleDeleteCard = () => {
-    // In a real app, delete from database
-    setIsDeleteDialogOpen(false);
-    toast({
-      title: "Carta eliminada",
-      description: `${selectedCard?.name} ha sido eliminada de tu colección`,
-      duration: 3000,
-    });
+    if (selectedCard?.id) {
+      deleteCardMutation.mutate(selectedCard.id);
+    }
   };
 
   const handleEdit = (card: any) => {
@@ -164,8 +129,24 @@ const CollectionView = () => {
     setIsDeleteDialogOpen(true);
   };
 
+  if (!isAuthenticated) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Debes iniciar sesión para ver tu colección</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-12">
+        <p>Cargando tu colección...</p>
+      </div>
+    );
+  }
+
   // Filter cards based on search term
-  const filteredCards = MOCK_COLLECTION_DATA.filter(card =>
+  const filteredCards = collectionData.filter(card =>
     card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     card.set.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -323,8 +304,12 @@ const CollectionView = () => {
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={handleDeleteCard}>
-              Eliminar
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteCard}
+              disabled={deleteCardMutation.isPending}
+            >
+              {deleteCardMutation.isPending ? "Eliminando..." : "Eliminar"}
             </Button>
           </div>
         </DialogContent>
@@ -353,7 +338,6 @@ const CollectionView = () => {
               </div>
               
               <div className="grid gap-2">
-                {/* In a real app, these would be editable fields */}
                 <p className="text-sm">
                   <span className="text-muted-foreground">Cantidad:</span> {selectedCard.quantity}
                 </p>
@@ -376,7 +360,7 @@ const CollectionView = () => {
                 <Button variant="outline" onClick={() => setIsDetailsDialogOpen(false)}>
                   Cerrar
                 </Button>
-                <Button>
+                <Button disabled>
                   Guardar cambios
                 </Button>
               </div>

@@ -1,5 +1,8 @@
 
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { TabsContent, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,103 +14,104 @@ import { Separator } from "@/components/ui/separator";
 import CardGrid from "@/components/cards/CardGrid";
 import { ImportIcon, PlusIcon, StarIcon } from "lucide-react";
 
-// Mock user data
-const mockUser = {
-  id: "user123",
-  name: "Carlos Rodriguez",
-  username: "mtgmendoza",
-  avatar: "https://avatars.githubusercontent.com/u/123456",
-  location: "Mendoza, Argentina",
-  rating: 4.7,
-  transactions: 23,
-  joined: "Noviembre 2023"
-};
-
-// Mock inventory/collection data (small subset)
-const mockInventory = [
-  {
-    id: "3",
-    name: "Wrenn and Six",
-    set: "Modern Horizons",
-    imageUrl: "https://cards.scryfall.io/normal/front/4/a/4a706ecf-3277-40e3-871c-4ba4ead16e20.jpg",
-    price: 48000,
-    seller: {
-      id: "seller3",
-      name: "MTGStore",
-      rating: 4.7,
-    },
-    condition: "Near Mint",
-    language: "Inglés",
-    color: "green",
-  },
-  {
-    id: "4",
-    name: "Teferi, Time Raveler",
-    set: "War of the Spark",
-    imageUrl: "https://cards.scryfall.io/normal/front/5/c/5cb76266-ae50-4bbc-8f96-d98f309b02d3.jpg",
-    price: 20000,
-    seller: {
-      id: "seller1",
-      name: "MagicDealer",
-      rating: 4.8,
-    },
-    condition: "Near Mint",
-    language: "Inglés",
-    color: "blue",
-  },
-  {
-    id: "6",
-    name: "Grief",
-    set: "Modern Horizons 2",
-    imageUrl: "https://cards.scryfall.io/normal/front/e/6/e6befbc4-1320-4f26-bd9f-b1814fedda10.jpg",
-    price: 18000,
-    seller: {
-      id: "seller2",
-      name: "CardKingdom",
-      rating: 4.9,
-    },
-    condition: "Near Mint",
-    language: "Inglés",
-    color: "black",
-  },
-];
-
-// Mock wishlist - using same data structure as inventory for simplicity
-const mockWishlist = [
-  {
-    id: "1",
-    name: "Ragavan, Nimble Pilferer",
-    set: "Modern Horizons 2",
-    imageUrl: "https://cards.scryfall.io/normal/front/a/9/a9738cda-adb1-47fb-9f4c-ecd930228c4d.jpg",
-    price: 50000,
-    seller: {
-      id: "seller1",
-      name: "MagicDealer",
-      rating: 4.8,
-    },
-    condition: "Near Mint",
-    language: "Inglés",
-    color: "red",
-  },
-  {
-    id: "5",
-    name: "Solitude",
-    set: "Modern Horizons 2",
-    imageUrl: "https://cards.scryfall.io/normal/front/4/7/47a6234f-309f-4e03-9263-66da48b57153.jpg",
-    price: 35000,
-    seller: {
-      id: "seller4",
-      name: "MTGCollector",
-      rating: 4.6,
-    },
-    condition: "Near Mint",
-    language: "Español",
-    color: "white",
-  },
-];
-
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("inventory");
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Fetch user's inventory
+  const { data: inventory = [], isLoading: inventoryLoading } = useQuery({
+    queryKey: ['userInventory', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('user_inventory')
+        .select(`
+          *,
+          cards:card_id(*)
+        `)
+        .eq('user_id', user.id);
+        
+      if (error) throw error;
+      
+      return data.map((item) => ({
+        id: item.id,
+        name: item.cards?.name || 'Carta sin nombre',
+        set: item.cards?.set_name || 'Set desconocido',
+        imageUrl: item.cards?.image_uri || '',
+        price: item.price,
+        seller: { 
+          id: user.id, 
+          name: user.username || 'Mi colección',
+          rating: 5.0
+        },
+        condition: item.condition,
+        language: item.language,
+        quantity: item.quantity,
+        color: "colorless", // Default color, could be enhanced
+      }));
+    },
+    enabled: !!user?.id && isAuthenticated
+  });
+
+  // Fetch user's wishlist
+  const { data: wishlist = [], isLoading: wishlistLoading } = useQuery({
+    queryKey: ['userWishlist', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('wishlists')
+        .select(`
+          *,
+          cards:card_id(*)
+        `)
+        .eq('user_id', user.id);
+        
+      if (error) throw error;
+      
+      return data.map((item) => ({
+        id: item.id,
+        name: item.cards?.name || 'Carta sin nombre',
+        set: item.cards?.set_name || 'Set desconocido',
+        imageUrl: item.cards?.image_uri || '',
+        price: 0, // Wishlist items don't have prices
+        seller: { 
+          id: user.id, 
+          name: user.username || 'Mi wishlist',
+          rating: 5.0
+        },
+        condition: "NM",
+        language: "Inglés",
+        color: "colorless", // Default color
+      }));
+    },
+    enabled: !!user?.id && isAuthenticated
+  });
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <p>Cargando...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <p>Debes iniciar sesión para ver tu perfil</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -119,13 +123,13 @@ const ProfilePage = () => {
             <Card>
               <CardHeader className="text-center">
                 <Avatar className="h-24 w-24 mx-auto mb-4">
-                  <AvatarImage src={mockUser.avatar} alt={mockUser.name} />
-                  <AvatarFallback>{mockUser.name.charAt(0)}</AvatarFallback>
+                  <AvatarImage src={user.avatar_url} alt={user.username} />
+                  <AvatarFallback>{user.username?.charAt(0) || user.email.charAt(0)}</AvatarFallback>
                 </Avatar>
-                <CardTitle>{mockUser.name}</CardTitle>
+                <CardTitle>{user.username || 'Usuario sin nombre'}</CardTitle>
                 <CardDescription className="flex flex-col items-center gap-2">
-                  <span>@{mockUser.username}</span>
-                  <Badge variant="outline">{mockUser.location}</Badge>
+                  <span>@{user.username || 'usuario'}</span>
+                  <Badge variant="outline">Argentina</Badge>
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -133,21 +137,21 @@ const ProfilePage = () => {
                   <span className="text-muted-foreground">Rating</span>
                   <span className="flex items-center">
                     <StarIcon className="h-4 w-4 text-yellow-500 mr-1 inline" />
-                    {mockUser.rating}/5
+                    5.0/5
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Transacciones</span>
-                  <span>{mockUser.transactions}</span>
+                  <span>0</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Miembro desde</span>
-                  <span>{mockUser.joined}</span>
+                  <span>2024</span>
                 </div>
                 <Separator />
                 <div className="pt-2">
-                  <Button variant="outline" className="w-full">
-                    Enviar mensaje
+                  <Button variant="outline" className="w-full" disabled>
+                    Editar perfil
                   </Button>
                 </div>
               </CardContent>
@@ -187,8 +191,10 @@ const ProfilePage = () => {
               
               <TabsContent value="inventory" className="mt-0">
                 <h2 className="text-xl font-semibold mb-4">Mi inventario</h2>
-                {mockInventory.length > 0 ? (
-                  <CardGrid cards={mockInventory} />
+                {inventoryLoading ? (
+                  <p>Cargando inventario...</p>
+                ) : inventory.length > 0 ? (
+                  <CardGrid cards={inventory} />
                 ) : (
                   <Card className="bg-muted">
                     <CardContent className="flex flex-col items-center justify-center py-12">
@@ -206,8 +212,10 @@ const ProfilePage = () => {
               
               <TabsContent value="wishlist" className="mt-0">
                 <h2 className="text-xl font-semibold mb-4">Mi wishlist</h2>
-                {mockWishlist.length > 0 ? (
-                  <CardGrid cards={mockWishlist} />
+                {wishlistLoading ? (
+                  <p>Cargando wishlist...</p>
+                ) : wishlist.length > 0 ? (
+                  <CardGrid cards={wishlist} />
                 ) : (
                   <Card className="bg-muted">
                     <CardContent className="flex flex-col items-center justify-center py-12">
