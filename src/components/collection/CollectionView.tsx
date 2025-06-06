@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -42,7 +41,7 @@ const CollectionView = () => {
         .from('user_inventory')
         .select(`
           *,
-          cards:card_id(*)
+          cards(*)
         `)
         .eq('user_id', user.id);
         

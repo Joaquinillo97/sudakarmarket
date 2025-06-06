@@ -26,6 +26,11 @@ const Navbar = () => {
     navigate("/auth");
   };
 
+  const handleSearch = (query: string) => {
+    // Navigate to cards page with search query
+    navigate(`/cards?search=${encodeURIComponent(query)}`);
+  };
+
   // Define public navigation links (visible to all users)
   const publicNavItems = [
     { label: "Cartas", path: "/cards" },
@@ -87,7 +92,7 @@ const Navbar = () => {
 
         <div className="flex items-center gap-4">
           <div className="relative hidden md:block w-64">
-            <SearchAutocomplete />
+            <SearchAutocomplete onSearch={handleSearch} />
           </div>
 
           {isAuthenticated ? (
@@ -133,8 +138,8 @@ const Navbar = () => {
         <div className="container border-t py-3 px-4">
           <div className="relative mb-3">
             <SearchAutocomplete
+              onSearch={handleSearch}
               placeholder="Buscar cartas..."
-              className="w-full"
             />
           </div>
           <div className="flex flex-col space-y-2">

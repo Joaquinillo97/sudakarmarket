@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -60,7 +59,7 @@ const SellersPage = () => {
         .from('user_inventory')
         .select(`
           *,
-          cards:card_id(*)
+          cards(*)
         `)
         .eq('user_id', selectedSeller)
         .eq('for_trade', true); // Only get cards marked for trade

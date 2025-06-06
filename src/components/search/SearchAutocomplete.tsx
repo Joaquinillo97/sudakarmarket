@@ -7,9 +7,16 @@ import { useLocalCardAutocomplete } from "@/hooks/use-local-cards";
 interface SearchAutocompleteProps {
   onSearch: (query: string) => void;
   placeholder?: string;
+  className?: string;
+  redirectOnSelect?: boolean;
 }
 
-const SearchAutocomplete = ({ onSearch, placeholder = "Buscar cartas..." }: SearchAutocompleteProps) => {
+const SearchAutocomplete = ({ 
+  onSearch, 
+  placeholder = "Buscar cartas...",
+  className = "",
+  redirectOnSelect = false
+}: SearchAutocompleteProps) => {
   const [query, setQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   
@@ -34,7 +41,7 @@ const SearchAutocomplete = ({ onSearch, placeholder = "Buscar cartas..." }: Sear
   };
 
   return (
-    <div className="relative w-full">
+    <div className={`relative w-full ${className}`}>
       <form onSubmit={handleSubmit} className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input

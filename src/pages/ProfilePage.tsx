@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
@@ -28,7 +27,7 @@ const ProfilePage = () => {
         .from('user_inventory')
         .select(`
           *,
-          cards:card_id(*)
+          cards(*)
         `)
         .eq('user_id', user.id);
         
@@ -64,7 +63,7 @@ const ProfilePage = () => {
         .from('wishlists')
         .select(`
           *,
-          cards:card_id(*)
+          cards(*)
         `)
         .eq('user_id', user.id);
         
