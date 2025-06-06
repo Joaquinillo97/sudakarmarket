@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -44,6 +43,14 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
     handleFilterChange("name", cardName);
   };
 
+  // Auto-apply filters when card name changes
+  useEffect(() => {
+    if (filters.name.trim() !== "") {
+      console.log("Auto-applying filters due to name change:", filters.name);
+      onApplyFilters(filters);
+    }
+  }, [filters.name, onApplyFilters]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Submitting filters:", filters);
@@ -59,6 +66,7 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
           onSearch={handleSearchChange}
           redirectOnSelect={false}
           className="w-full"
+          initialValue={filters.name}
         />
       </div>
       

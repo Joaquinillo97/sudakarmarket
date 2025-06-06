@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useCardAutocomplete } from "@/hooks/use-scryfall";
@@ -9,16 +9,23 @@ interface SearchAutocompleteProps {
   placeholder?: string;
   className?: string;
   redirectOnSelect?: boolean;
+  initialValue?: string;
 }
 
 const SearchAutocomplete = ({ 
   onSearch, 
   placeholder = "Buscar cartas...",
   className = "",
-  redirectOnSelect = false
+  redirectOnSelect = false,
+  initialValue = ""
 }: SearchAutocompleteProps) => {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialValue);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  
+  // Update query when initialValue changes
+  useEffect(() => {
+    setQuery(initialValue);
+  }, [initialValue]);
   
   // Use Scryfall autocomplete for better suggestions
   const { data: suggestions = [] } = useCardAutocomplete(query);
