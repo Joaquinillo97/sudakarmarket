@@ -41,17 +41,6 @@ interface ScryfallSet {
   released_at: string
 }
 
-interface SyncProgress {
-  id: string
-  current_set_code?: string
-  current_page?: string
-  sets_completed: string[]
-  total_cards_processed: number
-  last_updated: string
-  status: 'running' | 'completed' | 'error'
-  error_message?: string
-}
-
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -65,7 +54,7 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    console.log('Starting improved Scryfall card synchronization...')
+    console.log('Starting sequential Scryfall card synchronization by sets...')
 
     // Parse request body for parameters
     const requestBody = await req.text()
@@ -79,156 +68,122 @@ Deno.serve(async (req) => {
     }
 
     const { 
-      resumeFromSet, 
-      maxSetsPerRun = 5, 
-      maxCardsPerSet = 1000 
+      maxSetsToProcess = 10,
+      continueSync = false
     } = requestParams as {
-      resumeFromSet?: string
-      maxSetsPerRun?: number
-      maxCardsPerSet?: number
+      maxSetsToProcess?: number
+      continueSync?: boolean
     }
 
-    // Create sync_progress table if it doesn't exist
-    await createSyncProgressTable(supabase)
+    // First, check what sets we already have cards for
+    console.log('Checking existing cards in database...')
+    const { data: existingCards, error: existingError } = await supabase
+      .from('cards')
+      .select('set_code')
+      .order('set_code')
 
-    // Get or create sync progress record
-    let syncProgress = await getSyncProgress(supabase)
-    
-    if (!syncProgress) {
-      syncProgress = await createSyncProgress(supabase)
+    if (existingError) {
+      console.error('Error fetching existing cards:', existingError)
+      throw existingError
     }
 
-    console.log('Current sync progress:', syncProgress)
-
-    // If sync is already completed, return status
-    if (syncProgress.status === 'completed') {
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Synchronization already completed',
-          totalCards: syncProgress.total_cards_processed,
-          status: 'completed'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Update status to running
-    await updateSyncProgress(supabase, {
-      ...syncProgress,
-      status: 'running',
-      last_updated: new Date().toISOString()
-    })
+    // Get unique set codes already in our database
+    const existingSets = new Set(existingCards?.map(card => card.set_code) || [])
+    console.log(`Found cards from ${existingSets.size} sets already in database:`, Array.from(existingSets).slice(0, 10), '...')
 
     // Get all sets from Scryfall
-    console.log('Fetching sets from Scryfall...')
-    const sets = await fetchScryfallSets()
+    console.log('Fetching all sets from Scryfall...')
+    const allSets = await fetchScryfallSets()
     
-    // Filter out sets that are already completed
-    const pendingSets = sets.filter(set => 
-      !syncProgress!.sets_completed.includes(set.code) &&
-      set.card_count > 0 // Only process sets with cards
-    )
-
-    console.log(`Found ${pendingSets.length} pending sets to process`)
-
-    // Process sets in batches
-    let setsProcessed = 0
-    let totalCardsThisRun = 0
-
-    for (const set of pendingSets) {
-      if (setsProcessed >= maxSetsPerRun) {
-        console.log(`Reached maximum sets per run (${maxSetsPerRun}). Stopping.`)
-        break
+    // Filter out sets that we already have cards for (unless continuing sync)
+    const setsToProcess = allSets.filter(set => {
+      if (!continueSync && existingSets.has(set.code)) {
+        return false // Skip sets we already have cards for
       }
+      return set.card_count > 0 // Only process sets with cards
+    })
 
-      console.log(`Processing set: ${set.name} (${set.code}) - ${set.card_count} cards`)
+    console.log(`Total sets available: ${allSets.length}`)
+    console.log(`Sets to process: ${setsToProcess.length}`)
+    console.log(`Processing first ${Math.min(maxSetsToProcess, setsToProcess.length)} sets...`)
+
+    let totalCardsProcessed = 0
+    let setsProcessed = 0
+
+    // Process sets sequentially
+    for (const set of setsToProcess.slice(0, maxSetsToProcess)) {
+      console.log(`\n--- Processing set: ${set.name} (${set.code}) - ${set.card_count} cards ---`)
 
       try {
-        const cardsProcessed = await processSingleSet(supabase, set, maxCardsPerSet)
-        
-        // Mark set as completed
-        syncProgress.sets_completed.push(set.code)
-        syncProgress.total_cards_processed += cardsProcessed
-        totalCardsThisRun += cardsProcessed
-        
-        // Update progress
-        await updateSyncProgress(supabase, {
-          ...syncProgress,
-          current_set_code: set.code,
-          last_updated: new Date().toISOString()
-        })
+        // Check if we already have some cards from this set
+        const { data: setCards, error: setError } = await supabase
+          .from('cards')
+          .select('id')
+          .eq('set_code', set.code)
+          .limit(1)
 
+        if (setError) {
+          console.error(`Error checking existing cards for set ${set.code}:`, setError)
+          continue
+        }
+
+        if (setCards && setCards.length > 0 && !continueSync) {
+          console.log(`Set ${set.code} already has cards, skipping...`)
+          continue
+        }
+
+        const cardsProcessed = await processSingleSetSequential(supabase, set)
+        totalCardsProcessed += cardsProcessed
         setsProcessed++
-        console.log(`Completed set ${set.code}. Cards processed: ${cardsProcessed}`)
+        
+        console.log(`✅ Completed set ${set.code}. Cards processed: ${cardsProcessed}`)
 
         // Add delay between sets to be respectful to Scryfall
-        await new Promise(resolve => setTimeout(resolve, 200))
+        if (setsProcessed < maxSetsToProcess) {
+          console.log('Waiting 500ms before next set...')
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
 
       } catch (error) {
-        console.error(`Error processing set ${set.code}:`, error)
-        
-        // Update progress with error
-        await updateSyncProgress(supabase, {
-          ...syncProgress,
-          status: 'error',
-          error_message: `Error processing set ${set.code}: ${error.message}`,
-          last_updated: new Date().toISOString()
-        })
-
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: `Error processing set ${set.code}: ${error.message}`,
-            totalProcessedThisRun: totalCardsThisRun
-          }),
-          { 
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        )
+        console.error(`❌ Error processing set ${set.code}:`, error)
+        // Continue with next set instead of failing completely
+        continue
       }
     }
 
-    // Check if all sets are completed
-    const allSetsCompleted = pendingSets.length === 0 || 
-      syncProgress.sets_completed.length >= sets.length
+    // Get final count of cards in database
+    const { count: finalCount, error: countError } = await supabase
+      .from('cards')
+      .select('*', { count: 'exact', head: true })
 
-    if (allSetsCompleted) {
-      await updateSyncProgress(supabase, {
-        ...syncProgress,
-        status: 'completed',
-        last_updated: new Date().toISOString()
-      })
+    const totalCardsInDB = finalCount || 0
 
-      console.log('Synchronization completed!')
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Synchronization completed successfully!',
-          totalCards: syncProgress.total_cards_processed,
-          status: 'completed'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
+    console.log(`\n🎉 Synchronization batch completed!`)
+    console.log(`- Sets processed in this batch: ${setsProcessed}`)
+    console.log(`- Cards added in this batch: ${totalCardsProcessed}`)
+    console.log(`- Total cards now in database: ${totalCardsInDB}`)
+
+    // Check if there are more sets to process
+    const remainingSets = setsToProcess.length - maxSetsToProcess
+    const hasMoreSets = remainingSets > 0
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Batch completed. Processed ${setsProcessed} sets with ${totalCardsThisRun} cards`,
-        totalCards: syncProgress.total_cards_processed,
+        message: hasMoreSets 
+          ? `Batch completed! Processed ${setsProcessed} sets with ${totalCardsProcessed} cards. ${remainingSets} sets remaining.`
+          : `Synchronization completed! Processed ${setsProcessed} sets with ${totalCardsProcessed} cards.`,
+        totalCards: totalCardsInDB,
         setsProcessed: setsProcessed,
-        cardsThisRun: totalCardsThisRun,
-        status: 'in_progress',
-        nextBatchAvailable: true
+        cardsThisRun: totalCardsProcessed,
+        status: hasMoreSets ? 'in_progress' : 'completed',
+        remainingSets: remainingSets
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
-    console.error('Sync error:', error)
+    console.error('❌ Sync error:', error)
     return new Response(
       JSON.stringify({ 
         success: false, 
@@ -244,83 +199,8 @@ Deno.serve(async (req) => {
 
 // Helper functions
 
-async function createSyncProgressTable(supabase: any) {
-  const { error } = await supabase.rpc('create_sync_progress_table_if_not_exists')
-  if (error && !error.message.includes('already exists')) {
-    // Create table using a simple insert/select approach since we can't execute raw SQL
-    try {
-      await supabase.from('sync_progress').select('id').limit(1)
-    } catch (e) {
-      console.log('sync_progress table does not exist, will track progress in memory for this run')
-    }
-  }
-}
-
-async function getSyncProgress(supabase: any): Promise<SyncProgress | null> {
-  try {
-    const { data, error } = await supabase
-      .from('sync_progress')
-      .select('*')
-      .eq('id', 'scryfall_sync')
-      .single()
-    
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-      console.error('Error fetching sync progress:', error)
-      return null
-    }
-    
-    return data
-  } catch (e) {
-    // Table might not exist, return null to create new progress
-    return null
-  }
-}
-
-async function createSyncProgress(supabase: any): Promise<SyncProgress> {
-  const newProgress: SyncProgress = {
-    id: 'scryfall_sync',
-    sets_completed: [],
-    total_cards_processed: 0,
-    last_updated: new Date().toISOString(),
-    status: 'running'
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from('sync_progress')
-      .insert(newProgress)
-      .select()
-      .single()
-    
-    if (error) {
-      console.error('Error creating sync progress:', error)
-      // Return the progress object anyway to continue
-      return newProgress
-    }
-    
-    return data
-  } catch (e) {
-    // If table doesn't exist, return the progress object to continue
-    console.log('Using in-memory progress tracking')
-    return newProgress
-  }
-}
-
-async function updateSyncProgress(supabase: any, progress: SyncProgress) {
-  try {
-    const { error } = await supabase
-      .from('sync_progress')
-      .upsert(progress)
-    
-    if (error) {
-      console.error('Error updating sync progress:', error)
-    }
-  } catch (e) {
-    console.log('Could not update sync progress in database, continuing...')
-  }
-}
-
 async function fetchScryfallSets(): Promise<ScryfallSet[]> {
+  console.log('Fetching sets from Scryfall API...')
   const response = await fetch(`${SCRYFALL_API_BASE}/sets`)
   
   if (!response.ok) {
@@ -330,21 +210,24 @@ async function fetchScryfallSets(): Promise<ScryfallSet[]> {
   const data = await response.json()
   
   // Filter for paper sets and sort by release date (oldest first for consistent processing)
-  return data.data
+  const filteredSets = data.data
     .filter((set: any) => 
       set.set_type !== 'token' && 
       set.set_type !== 'memorabilia' && 
       set.card_count > 0
     )
     .sort((a: any, b: any) => a.released_at.localeCompare(b.released_at))
+
+  console.log(`Found ${filteredSets.length} valid sets to potentially process`)
+  return filteredSets
 }
 
-async function processSingleSet(supabase: any, set: ScryfallSet, maxCards: number): Promise<number> {
+async function processSingleSetSequential(supabase: any, set: ScryfallSet): Promise<number> {
   let totalProcessed = 0
   let nextPageUrl = `${SCRYFALL_API_BASE}/cards/search?q=set:${set.code}&order=set`
   
-  while (nextPageUrl && totalProcessed < maxCards) {
-    console.log(`Fetching page for set ${set.code}, cards processed: ${totalProcessed}`)
+  while (nextPageUrl) {
+    console.log(`  Fetching page for set ${set.code}, cards processed so far: ${totalProcessed}`)
     
     // Fetch data from Scryfall with conservative rate limiting
     const response = await fetch(nextPageUrl)
@@ -352,9 +235,13 @@ async function processSingleSet(supabase: any, set: ScryfallSet, maxCards: numbe
     if (!response.ok) {
       if (response.status === 429) {
         // Rate limited, wait longer and retry
-        console.log('Rate limited, waiting 2 seconds...')
+        console.log('  Rate limited, waiting 2 seconds...')
         await new Promise(resolve => setTimeout(resolve, 2000))
         continue
+      }
+      if (response.status === 404) {
+        console.log(`  No cards found for set ${set.code}`)
+        break
       }
       throw new Error(`Scryfall API error: ${response.status}`)
     }
@@ -362,7 +249,7 @@ async function processSingleSet(supabase: any, set: ScryfallSet, maxCards: numbe
     const data: ScryfallResponse = await response.json()
     
     if (data.data.length === 0) {
-      console.log(`No cards found for set ${set.code}`)
+      console.log(`  No more cards found for set ${set.code}`)
       break
     }
     
@@ -393,19 +280,19 @@ async function processSingleSet(supabase: any, set: ScryfallSet, maxCards: numbe
       })
 
     if (error) {
-      console.error('Database error:', error)
+      console.error('  Database error:', error)
       throw error
     }
 
     totalProcessed += cardsToInsert.length
-    console.log(`Processed ${cardsToInsert.length} cards from set ${set.code} (Total: ${totalProcessed})`)
+    console.log(`  ✅ Processed ${cardsToInsert.length} cards from set ${set.code} (Total: ${totalProcessed})`)
 
     // Check if there are more pages
     nextPageUrl = data.has_more ? data.next_page : null
     
-    // Add conservative delay between requests (100ms)
+    // Add conservative delay between requests (150ms)
     if (nextPageUrl) {
-      await new Promise(resolve => setTimeout(resolve, 100))
+      await new Promise(resolve => setTimeout(resolve, 150))
     }
   }
 

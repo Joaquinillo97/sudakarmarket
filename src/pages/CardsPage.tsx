@@ -12,17 +12,17 @@ import CardsContent from "@/components/cards/CardsContent";
 import PageHeader from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 
 const CardsPage = () => {
   const isMobile = useIsMobile();
   const [isSyncing, setIsSyncing] = useState(false);
-  const [syncProgress, setSyncProgress] = useState<{
+  const [syncStats, setSyncStats] = useState<{
     totalCards: number;
     status: string;
     setsProcessed?: number;
     cardsThisRun?: number;
+    remainingSets?: number;
   } | null>(null);
   
   const {
@@ -54,38 +54,39 @@ const CardsPage = () => {
   // Calculate total pages
   const totalPages = Math.ceil(totalCards / 20);
 
-  // Function to trigger Scryfall synchronization
-  const handleSyncCards = async () => {
+  // Function to trigger sequential Scryfall synchronization
+  const handleSequentialSync = async (continueSync = false) => {
     setIsSyncing(true);
-    setSyncProgress(null);
+    setSyncStats(null);
     
     try {
       const { data, error } = await supabase.functions.invoke('sync-scryfall-cards', {
         body: {
-          maxSetsPerRun: 3, // Process 3 sets per run to avoid timeouts
-          maxCardsPerSet: 1000 // Limit cards per set
+          maxSetsToProcess: 5, // Process 5 sets per batch
+          continueSync: continueSync
         }
       });
       
       if (error) throw error;
       
       if (data?.success) {
-        setSyncProgress({
+        setSyncStats({
           totalCards: data.totalCards || 0,
           status: data.status || 'completed',
           setsProcessed: data.setsProcessed,
-          cardsThisRun: data.cardsThisRun
+          cardsThisRun: data.cardsThisRun,
+          remainingSets: data.remainingSets
         });
 
         if (data.status === 'completed') {
-          toast.success(`¡Sincronización completa! ${data.totalCards} cartas procesadas en total`);
+          toast.success(`¡Sincronización completa! ${data.totalCards} cartas en total en la base de datos`);
         } else if (data.status === 'in_progress') {
           toast.success(
             `Lote completado: ${data.setsProcessed} sets procesados (${data.cardsThisRun} cartas). Total: ${data.totalCards} cartas`,
             {
               action: {
-                label: "Continuar sync",
-                onClick: () => handleSyncCards()
+                label: "Continuar",
+                onClick: () => handleSequentialSync(true)
               }
             }
           );
@@ -101,27 +102,27 @@ const CardsPage = () => {
     }
   };
 
-  // Function to check sync status
-  const checkSyncStatus = async () => {
+  // Function to check current database status
+  const checkDatabaseStatus = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('sync-scryfall-cards');
-      
+      const { count, error } = await supabase
+        .from('cards')
+        .select('*', { count: 'exact', head: true });
+        
       if (error) throw error;
       
-      if (data?.success) {
-        setSyncProgress({
-          totalCards: data.totalCards || 0,
-          status: data.status || 'unknown'
-        });
-      }
+      setSyncStats({
+        totalCards: count || 0,
+        status: 'ready'
+      });
     } catch (error) {
-      console.error('Error checking sync status:', error);
+      console.error('Error checking database status:', error);
     }
   };
 
-  // Check sync status on component mount
+  // Check database status on component mount
   useState(() => {
-    checkSyncStatus();
+    checkDatabaseStatus();
   });
 
   // Display error if query fails
@@ -138,17 +139,24 @@ const CardsPage = () => {
         <div className="flex justify-between items-start mb-6 gap-4">
           <div className="flex-1">
             <PageHeader title="Explorar cartas" />
-            {syncProgress && (
+            {syncStats && (
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <Badge variant={syncProgress.status === 'completed' ? 'default' : 'secondary'}>
-                  {syncProgress.totalCards.toLocaleString()} cartas en BD
+                <Badge variant="default">
+                  {syncStats.totalCards.toLocaleString()} cartas en BD
                 </Badge>
-                {syncProgress.status === 'in_progress' && (
-                  <Badge variant="outline">Sync en progreso</Badge>
+                {syncStats.status === 'in_progress' && (
+                  <Badge variant="secondary">
+                    {syncStats.remainingSets} sets pendientes
+                  </Badge>
                 )}
-                {syncProgress.status === 'completed' && (
+                {syncStats.status === 'completed' && (
                   <Badge variant="outline" className="text-green-600">
                     Sync completo
+                  </Badge>
+                )}
+                {syncStats.setsProcessed && (
+                  <Badge variant="outline">
+                    Último lote: {syncStats.setsProcessed} sets
                   </Badge>
                 )}
               </div>
@@ -157,25 +165,32 @@ const CardsPage = () => {
           
           <div className="flex flex-col gap-2">
             <Button 
-              onClick={handleSyncCards}
+              onClick={() => handleSequentialSync(false)}
               disabled={isSyncing}
-              variant={syncProgress?.status === 'in_progress' ? 'default' : 'outline'}
+              variant="default"
               size="sm"
             >
-              {isSyncing ? 'Sincronizando...' : 
-               syncProgress?.status === 'in_progress' ? 'Continuar Sync' : 
-               'Sincronizar Scryfall'}
+              {isSyncing ? 'Sincronizando...' : 'Sincronizar por Sets'}
             </Button>
             
-            {syncProgress?.status === 'in_progress' && (
+            {syncStats?.status === 'in_progress' && syncStats?.remainingSets > 0 && (
               <Button 
-                onClick={checkSyncStatus}
-                variant="ghost"
+                onClick={() => handleSequentialSync(true)}
+                disabled={isSyncing}
+                variant="outline"
                 size="sm"
               >
-                Verificar estado
+                Continuar Sync ({syncStats.remainingSets} sets)
               </Button>
             )}
+            
+            <Button 
+              onClick={checkDatabaseStatus}
+              variant="ghost"
+              size="sm"
+            >
+              Verificar Estado
+            </Button>
           </div>
         </div>
         
