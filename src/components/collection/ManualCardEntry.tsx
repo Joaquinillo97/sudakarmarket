@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getAutocompleteSuggestions } from "@/services/scryfall";
+import { useLocalCardAutocomplete } from "@/hooks/use-local-cards";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
@@ -67,8 +66,7 @@ interface ManualCardEntryProps {
 
 const ManualCardEntry = ({ onSuccess }: ManualCardEntryProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [filteredCards, setFilteredCards] = useState<string[]>([]);
-  const [cardSets, setCardSets] = useState<string[]>([]);
+  const [cardQuery, setCardQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const { user } = useAuth();
 
@@ -85,29 +83,19 @@ const ManualCardEntry = ({ onSuccess }: ManualCardEntryProps) => {
     },
   });
 
+  // Use local card autocomplete instead of Scryfall
+  const { data: filteredCards = [] } = useLocalCardAutocomplete(cardQuery);
+
   // Filter cards based on input
-  const handleNameChange = async (value: string) => {
-    if (value.length >= 2) {
-      try {
-        const suggestions = await getAutocompleteSuggestions(value);
-        setFilteredCards(suggestions);
-        setShowSuggestions(true);
-      } catch (error) {
-        console.error("Error fetching card suggestions:", error);
-      }
-    } else {
-      setFilteredCards([]);
-      setShowSuggestions(false);
-    }
+  const handleNameChange = (value: string) => {
+    setCardQuery(value);
+    setShowSuggestions(value.length >= 2);
   };
 
-  const selectSuggestion = (card: string) => {
-    form.setValue("name", card);
+  const selectSuggestion = (cardName: string) => {
+    form.setValue("name", cardName);
     setShowSuggestions(false);
-    
-    // Fetch sets that contain this card
-    // In a real implementation, we would query Scryfall for sets containing this card
-    // For now, we'll just close the suggestions
+    setCardQuery(cardName);
   };
 
   const onSubmit = async (data: CardFormValues) => {
@@ -119,53 +107,31 @@ const ManualCardEntry = ({ onSuccess }: ManualCardEntryProps) => {
     setIsSubmitting(true);
     
     try {
-      // First check if the card exists in our database
+      // First check if the card exists in our local database
       let { data: existingCard, error: cardError } = await supabase
         .from('cards')
-        .select('id')
+        .select('id, scryfall_id')
         .eq('name', data.name)
         .eq('set_name', data.set)
-        .single();
+        .maybeSingle();
         
       let cardId;
       
       if (cardError || !existingCard) {
-        // Card doesn't exist yet, we should fetch it from Scryfall and insert it
-        // This is a simplified version - in a real app, you'd call Scryfall API
-        
-        // For now, just create a placeholder card with a generated scryfall_id
-        const generatedId = `placeholder-${Date.now()}`;
-        const { data: newCard, error: insertError } = await supabase
-          .from('cards')
-          .insert({
-            name: data.name,
-            set_name: data.set,
-            set_code: 'unknown', // In a real app, get this from Scryfall
-            collector_number: '1', // In a real app, get this from Scryfall
-            rarity: 'common', // In a real app, get this from Scryfall
-            scryfall_id: generatedId, // Add required scryfall_id field
-          })
-          .select('id')
-          .single();
-          
-        if (insertError) {
-          throw insertError;
-        }
-        
-        cardId = newCard.id;
+        toast.error("Carta no encontrada en la base de datos. Primero sincroniza las cartas de Scryfall.");
+        return;
       } else {
         cardId = existingCard.id;
       }
       
-      // Now add the card to the user's inventory
-      // Fix type error by explicitly specifying each field that's in the database schema
+      // Add the card to the user's inventory
       const { error: inventoryError } = await supabase
         .from('user_inventory')
         .insert({
           card_id: cardId,
           quantity: data.quantity,
-          condition: data.condition as any, // Cast to any to avoid type issues
-          language: data.language as any, // Cast to any to avoid type issues
+          condition: data.condition as any,
+          language: data.language as any,
           price: data.price,
           for_trade: data.forTrade,
           user_id: user.id

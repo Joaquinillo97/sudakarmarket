@@ -9,78 +9,13 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      card_info: {
-        Row: {
-          cmc: number | null
-          color_identity: string[] | null
-          colors: string[] | null
-          created_at: string
-          id: string
-          keywords: string[] | null
-          last_price_update: string | null
-          legalities: Json | null
-          mana_cost: string | null
-          oracle_text: string | null
-          price_ars: number | null
-          price_eur: number | null
-          price_usd: number | null
-          type_line: string | null
-          updated_at: string
-        }
-        Insert: {
-          cmc?: number | null
-          color_identity?: string[] | null
-          colors?: string[] | null
-          created_at?: string
-          id: string
-          keywords?: string[] | null
-          last_price_update?: string | null
-          legalities?: Json | null
-          mana_cost?: string | null
-          oracle_text?: string | null
-          price_ars?: number | null
-          price_eur?: number | null
-          price_usd?: number | null
-          type_line?: string | null
-          updated_at?: string
-        }
-        Update: {
-          cmc?: number | null
-          color_identity?: string[] | null
-          colors?: string[] | null
-          created_at?: string
-          id?: string
-          keywords?: string[] | null
-          last_price_update?: string | null
-          legalities?: Json | null
-          mana_cost?: string | null
-          oracle_text?: string | null
-          price_ars?: number | null
-          price_eur?: number | null
-          price_usd?: number | null
-          type_line?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "card_info_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "cards"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       cards: {
         Row: {
           collector_number: string
           created_at: string
           id: string
           image_uri: string | null
-          image_uri_art_crop: string | null
-          image_uri_small: string | null
           name: string
-          rarity: string
           scryfall_id: string
           set_code: string
           set_name: string
@@ -91,10 +26,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_uri?: string | null
-          image_uri_art_crop?: string | null
-          image_uri_small?: string | null
           name: string
-          rarity: string
           scryfall_id: string
           set_code: string
           set_name: string
@@ -105,10 +37,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_uri?: string | null
-          image_uri_art_crop?: string | null
-          image_uri_small?: string | null
           name?: string
-          rarity?: string
           scryfall_id?: string
           set_code?: string
           set_name?: string
@@ -242,13 +171,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "user_inventory_card_id_fkey"
-            columns: ["card_id"]
-            isOneToOne: false
-            referencedRelation: "cards"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "user_inventory_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -280,13 +202,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "wishlists_card_id_fkey"
-            columns: ["card_id"]
-            isOneToOne: false
-            referencedRelation: "cards"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "wishlists_user_id_fkey"
             columns: ["user_id"]
