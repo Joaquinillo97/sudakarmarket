@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useLocalCardAutocomplete } from "@/hooks/use-local-cards";
+import { useCardAutocomplete } from "@/hooks/use-scryfall";
 
 interface SearchAutocompleteProps {
   onSearch: (query: string) => void;
@@ -20,8 +20,8 @@ const SearchAutocomplete = ({
   const [query, setQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   
-  // Use local card autocomplete instead of Scryfall
-  const { data: suggestions = [] } = useLocalCardAutocomplete(query);
+  // Use Scryfall autocomplete for better suggestions
+  const { data: suggestions = [] } = useCardAutocomplete(query);
 
   const handleInputChange = (value: string) => {
     setQuery(value);
