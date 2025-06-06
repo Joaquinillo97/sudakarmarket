@@ -75,35 +75,37 @@ Deno.serve(async (req) => {
       continueSync?: boolean
     }
 
-    // First, check what sets we already have cards for
-    console.log('Checking existing cards in database...')
-    const { data: existingCards, error: existingError } = await supabase
-      .from('cards')
-      .select('set_code')
-      .order('set_code')
-
-    if (existingError) {
-      console.error('Error fetching existing cards:', existingError)
-      throw existingError
-    }
-
-    // Get unique set codes already in our database
-    const existingSets = new Set(existingCards?.map(card => card.set_code) || [])
-    console.log(`Found cards from ${existingSets.size} sets already in database:`, Array.from(existingSets).slice(0, 10), '...')
-
-    // Get all sets from Scryfall
+    // Get all sets from Scryfall first
     console.log('Fetching all sets from Scryfall...')
     const allSets = await fetchScryfallSets()
     
-    // Filter out sets that we already have cards for (unless continuing sync)
+    // Check which sets we have in our database and their completion status
+    console.log('Checking set completion status in database...')
+    const setCompletionStatus = await checkSetCompletionStatus(supabase, allSets)
+    
+    // Filter sets that need processing
     const setsToProcess = allSets.filter(set => {
-      if (!continueSync && existingSets.has(set.code)) {
-        return false // Skip sets we already have cards for
+      const status = setCompletionStatus.get(set.code)
+      if (!status) {
+        // Set not in database at all
+        return set.card_count > 0
       }
-      return set.card_count > 0 // Only process sets with cards
+      
+      if (!continueSync && status.isComplete) {
+        // Set is complete and we're not forcing continuation
+        return false
+      }
+      
+      // Process if incomplete or if we're continuing sync
+      return set.card_count > 0
     })
 
+    const completeSets = Array.from(setCompletionStatus.values()).filter(s => s.isComplete).length
+    const incompleteSets = Array.from(setCompletionStatus.values()).filter(s => !s.isComplete).length
+
     console.log(`Total sets available: ${allSets.length}`)
+    console.log(`Complete sets in database: ${completeSets}`)
+    console.log(`Incomplete sets in database: ${incompleteSets}`)
     console.log(`Sets to process: ${setsToProcess.length}`)
     console.log(`Processing first ${Math.min(maxSetsToProcess, setsToProcess.length)} sets...`)
 
@@ -112,26 +114,12 @@ Deno.serve(async (req) => {
 
     // Process sets sequentially
     for (const set of setsToProcess.slice(0, maxSetsToProcess)) {
-      console.log(`\n--- Processing set: ${set.name} (${set.code}) - ${set.card_count} cards ---`)
+      const status = setCompletionStatus.get(set.code)
+      const existingCount = status ? status.currentCount : 0
+      
+      console.log(`\n--- Processing set: ${set.name} (${set.code}) - ${existingCount}/${set.card_count} cards ---`)
 
       try {
-        // Check if we already have some cards from this set
-        const { data: setCards, error: setError } = await supabase
-          .from('cards')
-          .select('id')
-          .eq('set_code', set.code)
-          .limit(1)
-
-        if (setError) {
-          console.error(`Error checking existing cards for set ${set.code}:`, setError)
-          continue
-        }
-
-        if (setCards && setCards.length > 0 && !continueSync) {
-          console.log(`Set ${set.code} already has cards, skipping...`)
-          continue
-        }
-
         const cardsProcessed = await processSingleSetSequential(supabase, set)
         totalCardsProcessed += cardsProcessed
         setsProcessed++
@@ -177,7 +165,9 @@ Deno.serve(async (req) => {
         setsProcessed: setsProcessed,
         cardsThisRun: totalCardsProcessed,
         status: hasMoreSets ? 'in_progress' : 'completed',
-        remainingSets: remainingSets
+        remainingSets: remainingSets,
+        completeSets: completeSets,
+        incompleteSets: incompleteSets
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
@@ -220,6 +210,47 @@ async function fetchScryfallSets(): Promise<ScryfallSet[]> {
 
   console.log(`Found ${filteredSets.length} valid sets to potentially process`)
   return filteredSets
+}
+
+async function checkSetCompletionStatus(supabase: any, allSets: ScryfallSet[]): Promise<Map<string, { currentCount: number, expectedCount: number, isComplete: boolean }>> {
+  // Get count of cards per set in our database
+  const { data: setCounts, error } = await supabase
+    .from('cards')
+    .select('set_code')
+    .order('set_code')
+
+  if (error) {
+    console.error('Error fetching set counts:', error)
+    throw error
+  }
+
+  // Count cards per set
+  const setCountMap = new Map<string, number>()
+  setCounts?.forEach((card: any) => {
+    const currentCount = setCountMap.get(card.set_code) || 0
+    setCountMap.set(card.set_code, currentCount + 1)
+  })
+
+  // Create completion status map
+  const completionStatus = new Map<string, { currentCount: number, expectedCount: number, isComplete: boolean }>()
+  
+  allSets.forEach(set => {
+    const currentCount = setCountMap.get(set.code) || 0
+    const expectedCount = set.card_count
+    const isComplete = currentCount >= expectedCount
+    
+    completionStatus.set(set.code, {
+      currentCount,
+      expectedCount,
+      isComplete
+    })
+
+    if (currentCount > 0) {
+      console.log(`Set ${set.code}: ${currentCount}/${expectedCount} cards (${isComplete ? 'COMPLETE' : 'INCOMPLETE'})`)
+    }
+  })
+
+  return completionStatus
 }
 
 async function processSingleSetSequential(supabase: any, set: ScryfallSet): Promise<number> {
