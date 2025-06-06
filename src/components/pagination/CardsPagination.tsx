@@ -26,7 +26,40 @@ const CardsPagination = ({
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
     onPageChange(page);
+    // Scroll to top when changing pages for better UX
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Show fewer pages in mobile for better UX with Scryfall's large datasets
+  const getVisiblePages = () => {
+    const delta = window.innerWidth < 768 ? 1 : 2; // Show fewer pages on mobile
+    const range = [];
+    const rangeWithDots = [];
+
+    for (let i = Math.max(2, currentPage - delta); 
+         i <= Math.min(totalPages - 1, currentPage + delta); 
+         i++) {
+      range.push(i);
+    }
+
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, '...');
+    } else {
+      rangeWithDots.push(1);
+    }
+
+    rangeWithDots.push(...range);
+
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push('...', totalPages);
+    } else if (totalPages > 1) {
+      rangeWithDots.push(totalPages);
+    }
+
+    return rangeWithDots;
+  };
+
+  const visiblePages = getVisiblePages();
 
   return (
     <div className="flex justify-center mt-8">
@@ -43,95 +76,24 @@ const CardsPagination = ({
             />
           </PaginationItem>
           
-          {/* First page */}
-          <PaginationItem>
-            <PaginationLink 
-              href="#" 
-              onClick={(e) => {
-                e.preventDefault();
-                handlePageChange(1);
-              }}
-              isActive={currentPage === 1}
-            >
-              1
-            </PaginationLink>
-          </PaginationItem>
-          
-          {/* Ellipsis if current page > 3 */}
-          {currentPage > 3 && (
-            <PaginationItem>
-              <PaginationEllipsis />
+          {visiblePages.map((page, index) => (
+            <PaginationItem key={index}>
+              {page === '...' ? (
+                <PaginationEllipsis />
+              ) : (
+                <PaginationLink 
+                  href="#" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(page as number);
+                  }}
+                  isActive={currentPage === page}
+                >
+                  {page}
+                </PaginationLink>
+              )}
             </PaginationItem>
-          )}
-          
-          {/* Page before current if not first or second page */}
-          {currentPage > 2 && (
-            <PaginationItem>
-              <PaginationLink 
-                href="#" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  handlePageChange(currentPage - 1);
-                }}
-              >
-                {currentPage - 1}
-              </PaginationLink>
-            </PaginationItem>
-          )}
-          
-          {/* Current page if not first page */}
-          {currentPage !== 1 && (
-            <PaginationItem>
-              <PaginationLink 
-                href="#" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  handlePageChange(currentPage);
-                }}
-                isActive={true}
-              >
-                {currentPage}
-              </PaginationLink>
-            </PaginationItem>
-          )}
-          
-          {/* Next page if available and not last */}
-          {currentPage < totalPages - 1 && (
-            <PaginationItem>
-              <PaginationLink 
-                href="#" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  handlePageChange(currentPage + 1);
-                }}
-              >
-                {currentPage + 1}
-              </PaginationLink>
-            </PaginationItem>
-          )}
-          
-          {/* Ellipsis if current page < totalpages - 2 */}
-          {currentPage < totalPages - 2 && (
-            <PaginationItem>
-              <PaginationEllipsis />
-            </PaginationItem>
-          )}
-          
-          {/* Last page if not the first page */}
-          {totalPages > 1 && (
-            <PaginationItem>
-              <PaginationLink 
-                href="#" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  handlePageChange(totalPages);
-                }}
-                isActive={currentPage === totalPages}
-              >
-                {totalPages}
-              </PaginationLink>
-            </PaginationItem>
-          )}
+          ))}
           
           <PaginationItem>
             <PaginationNext 

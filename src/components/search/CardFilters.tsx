@@ -81,6 +81,12 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
               <SelectItem value="woe">Wilds of Eldraine</SelectItem>
               <SelectItem value="mom">March of the Machine</SelectItem>
               <SelectItem value="one">Phyrexia: All Will Be One</SelectItem>
+              <SelectItem value="bro">The Brothers' War</SelectItem>
+              <SelectItem value="dmu">Dominaria United</SelectItem>
+              <SelectItem value="snc">Streets of New Capenna</SelectItem>
+              <SelectItem value="neo">Kamigawa: Neon Dynasty</SelectItem>
+              <SelectItem value="vow">Innistrad: Crimson Vow</SelectItem>
+              <SelectItem value="mid">Innistrad: Midnight Hunt</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -143,19 +149,22 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
           <AccordionTrigger className="text-sm">Filtros avanzados</AccordionTrigger>
           <AccordionContent className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-sm">Rango de precio (ARS)</Label>
+              <Label className="text-sm">Rango de precio (USD convertido a ARS)</Label>
               <Slider 
                 value={filters.priceRange}
                 defaultValue={[0, 100000]} 
                 max={100000} 
                 step={1000}
                 onValueChange={(value) => handleFilterChange("priceRange", value)} 
-                className="mt-6" // Add space for the thumbs
+                className="mt-6"
               />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>${filters.priceRange[0].toLocaleString()}</span>
                 <span>${filters.priceRange[1].toLocaleString()}</span>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Los precios se filtran del lado del cliente después de obtener los datos de Scryfall
+              </p>
             </div>
             
             <div className="space-y-2">
@@ -173,28 +182,6 @@ const CardFilters = ({ onApplyFilters }: CardFiltersProps) => {
                   <SelectItem value="uncommon">Infrecuente</SelectItem>
                   <SelectItem value="rare">Rara</SelectItem>
                   <SelectItem value="mythic">Mítica</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="condition-filter" className="block">Estado</Label>
-              <Select
-                value={filters.condition}
-                onValueChange={(value) => handleFilterChange("condition", value)}
-              >
-                <SelectTrigger id="condition-filter">
-                  <SelectValue placeholder="Todos los estados" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los estados</SelectItem>
-                  <SelectItem value="mint">Mint (M)</SelectItem>
-                  <SelectItem value="near_mint">Near Mint (NM)</SelectItem>
-                  <SelectItem value="excellent">Excellent (EX)</SelectItem>
-                  <SelectItem value="good">Good (GD)</SelectItem>
-                  <SelectItem value="light_played">Light Played (LP)</SelectItem>
-                  <SelectItem value="played">Played (PL)</SelectItem>
-                  <SelectItem value="poor">Poor (PR)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
