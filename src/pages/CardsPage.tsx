@@ -11,11 +11,19 @@ import DesktopFilters from "@/components/search/DesktopFilters";
 import CardsContent from "@/components/cards/CardsContent";
 import PageHeader from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 
 const CardsPage = () => {
   const isMobile = useIsMobile();
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState<{
+    totalCards: number;
+    status: string;
+    setsProcessed?: number;
+    cardsThisRun?: number;
+  } | null>(null);
   
   const {
     filters,
@@ -49,13 +57,39 @@ const CardsPage = () => {
   // Function to trigger Scryfall synchronization
   const handleSyncCards = async () => {
     setIsSyncing(true);
+    setSyncProgress(null);
+    
     try {
-      const { data, error } = await supabase.functions.invoke('sync-scryfall-cards');
+      const { data, error } = await supabase.functions.invoke('sync-scryfall-cards', {
+        body: {
+          maxSetsPerRun: 3, // Process 3 sets per run to avoid timeouts
+          maxCardsPerSet: 1000 // Limit cards per set
+        }
+      });
       
       if (error) throw error;
       
       if (data?.success) {
-        toast.success(`Sincronización completa! ${data.totalProcessed} cartas procesadas`);
+        setSyncProgress({
+          totalCards: data.totalCards || 0,
+          status: data.status || 'completed',
+          setsProcessed: data.setsProcessed,
+          cardsThisRun: data.cardsThisRun
+        });
+
+        if (data.status === 'completed') {
+          toast.success(`¡Sincronización completa! ${data.totalCards} cartas procesadas en total`);
+        } else if (data.status === 'in_progress') {
+          toast.success(
+            `Lote completado: ${data.setsProcessed} sets procesados (${data.cardsThisRun} cartas). Total: ${data.totalCards} cartas`,
+            {
+              action: {
+                label: "Continuar sync",
+                onClick: () => handleSyncCards()
+              }
+            }
+          );
+        }
       } else {
         throw new Error(data?.error || 'Error desconocido');
       }
@@ -66,6 +100,29 @@ const CardsPage = () => {
       setIsSyncing(false);
     }
   };
+
+  // Function to check sync status
+  const checkSyncStatus = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-scryfall-cards');
+      
+      if (error) throw error;
+      
+      if (data?.success) {
+        setSyncProgress({
+          totalCards: data.totalCards || 0,
+          status: data.status || 'unknown'
+        });
+      }
+    } catch (error) {
+      console.error('Error checking sync status:', error);
+    }
+  };
+
+  // Check sync status on component mount
+  useState(() => {
+    checkSyncStatus();
+  });
 
   // Display error if query fails
   if (isError) {
@@ -78,15 +135,48 @@ const CardsPage = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 container px-4 md:px-6 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <PageHeader title="Explorar cartas" />
-          <Button 
-            onClick={handleSyncCards}
-            disabled={isSyncing}
-            variant="outline"
-          >
-            {isSyncing ? 'Sincronizando...' : 'Sincronizar Scryfall'}
-          </Button>
+        <div className="flex justify-between items-start mb-6 gap-4">
+          <div className="flex-1">
+            <PageHeader title="Explorar cartas" />
+            {syncProgress && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <Badge variant={syncProgress.status === 'completed' ? 'default' : 'secondary'}>
+                  {syncProgress.totalCards.toLocaleString()} cartas en BD
+                </Badge>
+                {syncProgress.status === 'in_progress' && (
+                  <Badge variant="outline">Sync en progreso</Badge>
+                )}
+                {syncProgress.status === 'completed' && (
+                  <Badge variant="outline" className="text-green-600">
+                    Sync completo
+                  </Badge>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className="flex flex-col gap-2">
+            <Button 
+              onClick={handleSyncCards}
+              disabled={isSyncing}
+              variant={syncProgress?.status === 'in_progress' ? 'default' : 'outline'}
+              size="sm"
+            >
+              {isSyncing ? 'Sincronizando...' : 
+               syncProgress?.status === 'in_progress' ? 'Continuar Sync' : 
+               'Sincronizar Scryfall'}
+            </Button>
+            
+            {syncProgress?.status === 'in_progress' && (
+              <Button 
+                onClick={checkSyncStatus}
+                variant="ghost"
+                size="sm"
+              >
+                Verificar estado
+              </Button>
+            )}
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
