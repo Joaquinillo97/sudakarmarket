@@ -9,42 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      cards: {
-        Row: {
-          collector_number: string
-          created_at: string
-          id: string
-          image_uri: string | null
-          name: string
-          scryfall_id: string
-          set_code: string
-          set_name: string
-          updated_at: string
-        }
-        Insert: {
-          collector_number: string
-          created_at?: string
-          id?: string
-          image_uri?: string | null
-          name: string
-          scryfall_id: string
-          set_code: string
-          set_name: string
-          updated_at?: string
-        }
-        Update: {
-          collector_number?: string
-          created_at?: string
-          id?: string
-          image_uri?: string | null
-          name?: string
-          scryfall_id?: string
-          set_code?: string
-          set_name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       messages: {
         Row: {
           content: string
@@ -185,13 +149,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_user_inventory_card"
-            columns: ["card_id"]
-            isOneToOne: false
-            referencedRelation: "cards"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fk_user_inventory_user"
             columns: ["user_id"]
             isOneToOne: false
@@ -230,13 +187,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_wishlists_card"
-            columns: ["card_id"]
-            isOneToOne: false
-            referencedRelation: "cards"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "fk_wishlists_user"
             columns: ["user_id"]

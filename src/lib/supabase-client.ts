@@ -1,4 +1,3 @@
-
 // This file will be updated when we connect to Supabase
 // It will contain the client initialization and helper functions
 
@@ -20,31 +19,6 @@ export interface UserProfile {
   rating?: number;
   transactions_count?: number;
   created_at: string;
-}
-
-export interface CardData {
-  id: string;
-  scryfall_id: string;
-  name: string;
-  set: string;
-  set_name: string;
-  image_url: string;
-  color?: string;
-  rarity?: string;
-  language?: string;
-}
-
-export interface CardInfo {
-  card_id: string;
-  price_usd?: number;
-  price_eur?: number;
-  price_ars?: number;
-  last_price_update?: string;
-  color_identity?: string[];
-  collector_number?: string;
-  mana_cost?: string;
-  cmc?: number;
-  type_line?: string;
 }
 
 export interface UserInventoryCard {
@@ -81,12 +55,6 @@ export const supabaseFunctions = {
   getUserProfile: async (userId: string): Promise<UserProfile | null> => {
     console.warn('Supabase not connected - getUserProfile');
     return null;
-  },
-  
-  // Card functions
-  searchCards: async (searchParams: any): Promise<CardData[]> => {
-    console.warn('Supabase not connected - searchCards');
-    return [];
   },
   
   // Inventory functions
