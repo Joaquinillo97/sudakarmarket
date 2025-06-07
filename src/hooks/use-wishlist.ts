@@ -9,14 +9,14 @@ export interface WishlistItem {
   id: string;
   user_id: string;
   card_id: string;
-  priority: number | null;
+  quantity: number;
   created_at: string;
 }
 
 export interface WishlistCardData {
   id: string;
   card_id: string;
-  priority: number | null;
+  quantity: number;
   name: string;
   set: string;
   imageUrl: string;
@@ -54,7 +54,7 @@ export function useUserWishlist() {
             return {
               id: item.id,
               card_id: item.card_id,
-              priority: item.priority,
+              quantity: item.quantity,
               name: scryfallCard.name,
               set: scryfallCard.set_name,
               imageUrl: scryfallCard.image_uris?.normal || scryfallCard.image_uris?.large || '',
@@ -68,7 +68,7 @@ export function useUserWishlist() {
             return {
               id: item.id,
               card_id: item.card_id,
-              priority: item.priority,
+              quantity: item.quantity,
               name: 'Carta no encontrada',
               set: 'Desconocido',
               imageUrl: '',
@@ -103,7 +103,7 @@ export function useAddToWishlist() {
         .insert({
           user_id: user.id,
           card_id: cardId,
-          priority: 3
+          quantity: 1
         })
         .select()
         .single();

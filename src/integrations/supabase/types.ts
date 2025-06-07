@@ -169,21 +169,21 @@ export type Database = {
           card_id: string
           created_at: string
           id: string
-          priority: number | null
+          quantity: number
           user_id: string
         }
         Insert: {
           card_id: string
           created_at?: string
           id?: string
-          priority?: number | null
+          quantity?: number
           user_id: string
         }
         Update: {
           card_id?: string
           created_at?: string
           id?: string
-          priority?: number | null
+          quantity?: number
           user_id?: string
         }
         Relationships: [
