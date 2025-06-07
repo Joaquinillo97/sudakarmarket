@@ -21,9 +21,10 @@ interface Card {
 interface CardGridProps {
   cards: Card[];
   isLoading?: boolean;
+  isWishlistView?: boolean;
 }
 
-const CardGrid = ({ cards, isLoading = false }: CardGridProps) => {
+const CardGrid = ({ cards, isLoading = false, isWishlistView = false }: CardGridProps) => {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
       {isLoading ? (
@@ -40,7 +41,7 @@ const CardGrid = ({ cards, isLoading = false }: CardGridProps) => {
         </div>
       ) : (
         cards.map((card) => (
-          <CardItem key={card.id} {...card} />
+          <CardItem key={card.id} {...card} isWishlistView={isWishlistView} />
         ))
       )}
     </div>
