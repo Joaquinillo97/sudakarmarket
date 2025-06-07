@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,8 +13,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useToast } from "@/hooks/use-toast";
 import { Heart } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useIsInWishlist, useAddToWishlist, useRemoveFromWishlist } from "@/hooks/use-wishlist";
 
 interface CardItemProps {
   id: string;
@@ -23,7 +23,7 @@ interface CardItemProps {
   set: string;
   imageUrl: string;
   price: number;
-  seller?: {  // Changed from required to optional
+  seller?: {
     id: string;
     name: string;
     rating: number;
@@ -44,27 +44,27 @@ const CardItem = ({
   language,
   color = "colorless"
 }: CardItemProps) => {
-  const [isLiked, setIsLiked] = useState(false);
-  const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const { data: isInWishlist = false } = useIsInWishlist(id);
+  const addToWishlistMutation = useAddToWishlist();
+  const removeFromWishlistMutation = useRemoveFromWishlist();
 
-  // Decide which color class to apply
   const colorClass = `mtg-${color.toLowerCase()}`;
 
   const handleWishlistToggle = () => {
-    setIsLiked(prev => !prev);
-    
-    // Show toast notification
-    toast({
-      title: isLiked ? "Quitada de wishlist" : "¡Agregada a wishlist!",
-      description: isLiked 
-        ? `${name} fue quitada de tu wishlist` 
-        : `${name} fue agregada a tu wishlist`,
-      duration: 3000,
-    });
+    if (!isAuthenticated) {
+      // Could show a toast or redirect to login
+      return;
+    }
 
-    // In a real app, this is where we would call an API to update the user's wishlist
-    console.log(`Card ${id} ${isLiked ? 'removed from' : 'added to'} wishlist`);
+    if (isInWishlist) {
+      removeFromWishlistMutation.mutate(id);
+    } else {
+      addToWishlistMutation.mutate(id);
+    }
   };
+
+  const isLoading = addToWishlistMutation.isPending || removeFromWishlistMutation.isPending;
 
   return (
     <Card className={`mtg-card overflow-hidden h-full`}>
@@ -77,25 +77,28 @@ const CardItem = ({
           >
             {name}
           </Link>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-7 w-7" 
-                  onClick={handleWishlistToggle}
-                >
-                  <Heart 
-                    className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`} 
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {isLiked ? "Quitar de wishlist" : "¡Agregar a wishlist!"}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          {isAuthenticated && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7" 
+                    onClick={handleWishlistToggle}
+                    disabled={isLoading}
+                  >
+                    <Heart 
+                      className={`h-4 w-4 ${isInWishlist ? "fill-red-500 text-red-500" : ""}`} 
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isInWishlist ? "Quitar de wishlist" : "¡Agregar a wishlist!"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
       </CardHeader>
       <CardContent className="p-3 pt-0">

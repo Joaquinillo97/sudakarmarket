@@ -1,13 +1,14 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 interface MatchedCard {
   id: string;
   name: string;
   condition: string;
   price: number;
+  card_id: string;
 }
 
 interface UserMatch {
@@ -19,10 +20,55 @@ interface UserMatch {
 
 interface UserMatchesProps {
   matches: UserMatch[];
-  onContactUser: (userId: string) => void;
+  isLoading?: boolean;
 }
 
-const UserMatches = ({ matches, onContactUser }: UserMatchesProps) => {
+const UserMatches = ({ matches, isLoading = false }: UserMatchesProps) => {
+  const { toast } = useToast();
+
+  const handleContactUser = (userId: string, userName: string) => {
+    // For now, just show a toast. Later this could open a chat or contact modal
+    toast({
+      title: "Contactar usuario",
+      description: `Funcionalidad de contacto con ${userName} próximamente disponible`,
+      duration: 3000,
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="mb-8 bg-muted/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">
+            Buscando matches...
+          </CardTitle>
+          <CardDescription>
+            Verificando si hay usuarios con cartas de tu wishlist
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="animate-pulse space-y-4">
+            {[1, 2].map((i) => (
+              <div key={i} className="bg-white dark:bg-black/20 p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-10 w-10 rounded-full bg-muted"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 w-24 bg-muted rounded"></div>
+                    <div className="h-3 w-32 bg-muted rounded"></div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-8 w-full bg-muted rounded"></div>
+                  <div className="h-8 w-full bg-muted rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!matches || matches.length === 0) {
     return null;
   }
@@ -47,6 +93,10 @@ const UserMatches = ({ matches, onContactUser }: UserMatchesProps) => {
                     src={match.userImage} 
                     alt={match.userName}
                     className="h-full w-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = `https://avatar.vercel.sh/${match.userName}`;
+                    }}
                   />
                 </div>
                 <div>
@@ -71,7 +121,7 @@ const UserMatches = ({ matches, onContactUser }: UserMatchesProps) => {
                   variant="default" 
                   size="sm" 
                   className="w-full mt-2"
-                  onClick={() => onContactUser(match.userId)}
+                  onClick={() => handleContactUser(match.userId, match.userName)}
                 >
                   Contactar
                 </Button>
