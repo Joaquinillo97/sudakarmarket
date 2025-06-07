@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -145,7 +144,7 @@ const AddCardDialog = () => {
         
         <div className="space-y-4">
           {!selectedCard ? (
-            <div className="flex flex-col items-center justify-center py-8">
+            <div className="flex flex-col items-center justify-center py-8 pb-12">
               <label className="block text-sm font-medium mb-4 text-center">
                 Buscar carta
               </label>
