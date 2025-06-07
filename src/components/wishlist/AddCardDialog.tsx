@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus } from "lucide-react";
-import { useCardAutocomplete } from "@/hooks/use-scryfall";
 import { useAddToWishlist } from "@/hooks/use-wishlist";
 import { getCardByName, getAllPrintings } from "@/services/scryfall";
 import { useToast } from "@/hooks/use-toast";
@@ -63,9 +62,9 @@ const AddCardDialog = () => {
         id: card.id,
         name: card.name,
         imageUrl: card.image_uris?.normal || card.image_uris?.large || '',
-        text: card.oracle_text || '',
+        text: card.oracle_text || 'Sin texto disponible',
         manaCost: card.mana_cost || '',
-        type: card.type_line || '',
+        type: card.type_line || 'Tipo desconocido',
         power: card.power,
         toughness: card.toughness,
         sets: printings.map(print => ({
@@ -168,9 +167,11 @@ const AddCardDialog = () => {
                     </div>
                     <div className="flex-1 space-y-2">
                       <h3 className="text-lg font-bold">{selectedCard.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {selectedCard.manaCost}
-                      </p>
+                      {selectedCard.manaCost && (
+                        <p className="text-sm text-muted-foreground">
+                          {selectedCard.manaCost}
+                        </p>
+                      )}
                       <p className="text-sm font-medium">{selectedCard.type}</p>
                       <p className="text-sm">{selectedCard.text}</p>
                       {selectedCard.power && selectedCard.toughness && (

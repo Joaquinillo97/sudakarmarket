@@ -1,3 +1,4 @@
+
 // Scryfall API service
 // Documentation: https://scryfall.com/docs/api
 
@@ -7,8 +8,14 @@ export interface ScryfallCard {
   name: string;
   set_name: string;
   set: string;
+  set_id: string;
   collector_number: string;
   rarity: string;
+  oracle_text?: string;
+  mana_cost?: string;
+  type_line?: string;
+  power?: string;
+  toughness?: string;
   image_uris?: {
     small: string;
     normal: string;
