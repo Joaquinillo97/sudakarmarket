@@ -51,12 +51,18 @@ const AddCardDialog = () => {
     if (!cardName.trim()) return;
     
     setIsLoading(true);
+    console.log(`🔍 Starting search for: "${cardName}"`);
+    
     try {
       // Buscar la carta por nombre exacto
+      console.log('📥 Fetching card by exact name...');
       const card = await getCardByName(cardName);
+      console.log('✅ Found card:', card.name);
       
       // Obtener todas las ediciones de esta carta
+      console.log('📚 Fetching all printings...');
       const printings = await getAllPrintings(card.name);
+      console.log(`📊 Total printings found: ${printings.length}`);
       
       const cardData: SelectedCard = {
         id: card.id,
@@ -75,9 +81,10 @@ const AddCardDialog = () => {
         }))
       };
       
+      console.log(`🎯 Card data prepared with ${cardData.sets.length} sets`);
       setSelectedCard(cardData);
     } catch (error) {
-      console.error('Error fetching card:', error);
+      console.error('❌ Error fetching card:', error);
       toast({
         title: "Error",
         description: "No se pudo encontrar la carta",
@@ -131,15 +138,15 @@ const AddCardDialog = () => {
           Agregar carta
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Agregar carta a wishlist</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
+        <div className="space-y-6">
           {!selectedCard ? (
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-medium mb-3">
                 Buscar carta
               </label>
               <SearchAutocomplete
@@ -148,52 +155,59 @@ const AddCardDialog = () => {
                 className="w-full"
               />
               {isLoading && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Buscando carta...
+                <p className="text-sm text-muted-foreground mt-3">
+                  Buscando carta y todas sus ediciones...
                 </p>
               )}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <Card>
-                <CardContent className="p-4">
-                  <div className="flex gap-4">
+                <CardContent className="p-6">
+                  <div className="flex gap-6">
                     <div className="flex-shrink-0">
                       <img 
                         src={selectedCard.imageUrl} 
                         alt={selectedCard.name}
-                        className="w-48 h-auto rounded"
+                        className="w-56 h-auto rounded"
                       />
                     </div>
-                    <div className="flex-1 space-y-2">
-                      <h3 className="text-lg font-bold">{selectedCard.name}</h3>
+                    <div className="flex-1 space-y-3">
+                      <h3 className="text-xl font-bold">{selectedCard.name}</h3>
                       {selectedCard.manaCost && (
                         <p className="text-sm text-muted-foreground">
                           {selectedCard.manaCost}
                         </p>
                       )}
                       <p className="text-sm font-medium">{selectedCard.type}</p>
-                      <p className="text-sm">{selectedCard.text}</p>
+                      <p className="text-sm leading-relaxed">{selectedCard.text}</p>
                       {selectedCard.power && selectedCard.toughness && (
                         <p className="text-sm font-medium">
                           {selectedCard.power}/{selectedCard.toughness}
                         </p>
                       )}
+                      <div className="bg-muted p-3 rounded">
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Ediciones encontradas: {selectedCard.sets.length}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-3">
                   Seleccionar edición
                 </label>
                 <Select value={selectedSet} onValueChange={setSelectedSet}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecciona una edición" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas las ediciones</SelectItem>
+                    <SelectItem value="all">
+                      Todas las ediciones ({selectedCard.sets.length})
+                    </SelectItem>
                     {selectedCard.sets.map((set) => (
                       <SelectItem key={set.set_id} value={set.set_id}>
                         {set.set_name} (#{set.collector_number})
@@ -203,7 +217,7 @@ const AddCardDialog = () => {
                 </Select>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <Button 
                   onClick={handleAddToWishlist}
                   disabled={!selectedSet || addToWishlistMutation.isPending}

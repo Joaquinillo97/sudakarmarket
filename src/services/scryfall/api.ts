@@ -48,15 +48,45 @@ export const getCardByName = async (name: string): Promise<ScryfallCard> => {
   return handleResponse<ScryfallCard>(response);
 };
 
-// Get all printings of a card by name
+// Get all printings of a card by name with pagination support
 export const getAllPrintings = async (cardName: string): Promise<ScryfallCard[]> => {
-  const url = `${SCRYFALL_API_BASE}/cards/search?q=${encodeURIComponent(`!"${cardName}"`)}`;
+  console.log(`🔍 Fetching all printings for: "${cardName}"`);
+  
+  const allCards: ScryfallCard[] = [];
+  let currentPage = 1;
+  let hasMore = true;
+  
   try {
-    const response = await fetch(url);
-    const result = await handleResponse<ScryfallListResponse>(response);
-    return result.data || [];
+    while (hasMore) {
+      const pageParam = currentPage > 1 ? `&page=${currentPage}` : '';
+      const url = `${SCRYFALL_API_BASE}/cards/search?q=${encodeURIComponent(`!"${cardName}"`)}${pageParam}&order=released`;
+      
+      console.log(`📄 Fetching page ${currentPage}: ${url}`);
+      
+      const response = await fetch(url);
+      const result = await handleResponse<ScryfallListResponse>(response);
+      
+      console.log(`✅ Page ${currentPage}: Found ${result.data?.length || 0} cards`);
+      
+      if (result.data && result.data.length > 0) {
+        allCards.push(...result.data);
+      }
+      
+      hasMore = result.has_more || false;
+      currentPage++;
+      
+      // Safety check to prevent infinite loops
+      if (currentPage > 20) {
+        console.warn('⚠️ Reached maximum page limit (20), stopping pagination');
+        break;
+      }
+    }
+    
+    console.log(`🎯 Total printings found for "${cardName}": ${allCards.length}`);
+    return allCards;
+    
   } catch (error) {
-    console.error('Error fetching card printings:', error);
+    console.error('❌ Error fetching card printings:', error);
     return [];
   }
 };

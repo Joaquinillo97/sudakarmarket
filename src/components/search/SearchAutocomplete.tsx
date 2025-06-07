@@ -58,7 +58,7 @@ const SearchAutocomplete = ({
           onChange={(e) => handleInputChange(e.target.value)}
           onFocus={() => setShowSuggestions(query.length >= 2 && suggestions.length > 0)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-          className="pl-10 pr-4"
+          className="pl-10 pr-4 h-11"
         />
       </form>
       
@@ -68,10 +68,10 @@ const SearchAutocomplete = ({
             <button
               key={index}
               type="button"
-              className="w-full px-4 py-2 text-left hover:bg-accent focus:bg-accent focus:outline-none"
+              className="w-full px-4 py-3 text-left hover:bg-accent focus:bg-accent focus:outline-none text-sm border-b last:border-b-0"
               onClick={() => handleSuggestionClick(suggestion)}
             >
-              {suggestion}
+              <span className="font-medium">{suggestion}</span>
             </button>
           ))}
         </div>
