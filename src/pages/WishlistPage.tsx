@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
-import { ImportIcon, SearchIcon } from "lucide-react";
+import { ImportIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserWishlist } from "@/hooks/use-wishlist";
@@ -64,12 +64,6 @@ const WishlistPage = () => {
               Importar de Moxfield
             </Button>
             <AddCardDialog />
-            <Button size="sm" asChild>
-              <Link to="/cards">
-                <SearchIcon className="mr-2 h-4 w-4" />
-                Buscar cartas
-              </Link>
-            </Button>
           </div>
         </div>
         
@@ -87,15 +81,7 @@ const WishlistPage = () => {
                 <p className="text-muted-foreground text-center mb-4">
                   No tienes cartas en tu wishlist. ¡Agrega algunas para empezar!
                 </p>
-                <div className="flex gap-2">
-                  <AddCardDialog />
-                  <Button variant="outline" asChild>
-                    <Link to="/cards">
-                      <SearchIcon className="mr-2 h-4 w-4" />
-                      Buscar cartas
-                    </Link>
-                  </Button>
-                </div>
+                <AddCardDialog />
               </CardContent>
             </Card>
           ) : (
