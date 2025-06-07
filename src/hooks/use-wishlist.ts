@@ -35,6 +35,8 @@ export function useUserWishlist() {
     queryFn: async () => {
       if (!user?.id) return [];
       
+      console.log('🔍 Fetching wishlist for user:', user.id);
+      
       const { data, error } = await supabase
         .from('wishlists')
         .select('*')
@@ -42,14 +44,17 @@ export function useUserWishlist() {
         .order('created_at', { ascending: false });
       
       if (error) {
-        console.error('Error fetching wishlist:', error);
+        console.error('❌ Error fetching wishlist:', error);
         throw error;
       }
+      
+      console.log('📋 Raw wishlist data:', data);
       
       // Fetch card details from Scryfall for each wishlist item
       const wishlistWithCards = await Promise.all(
         (data || []).map(async (item) => {
           try {
+            console.log(`🃏 Fetching card details for: ${item.card_id}`);
             const scryfallCard = await getCardById(item.card_id);
             return {
               id: item.id,
@@ -64,7 +69,7 @@ export function useUserWishlist() {
               color: scryfallCard.colors?.[0]?.toLowerCase() || 'colorless'
             };
           } catch (error) {
-            console.error('Error fetching card details:', error);
+            console.error('❌ Error fetching card details:', error);
             return {
               id: item.id,
               card_id: item.card_id,
@@ -81,6 +86,7 @@ export function useUserWishlist() {
         })
       );
       
+      console.log('✅ Processed wishlist with card details:', wishlistWithCards);
       return wishlistWithCards;
     },
     enabled: !!user?.id,
@@ -98,6 +104,8 @@ export function useAddToWishlist() {
     mutationFn: async (cardId: string) => {
       if (!user?.id) throw new Error('User not authenticated');
       
+      console.log('➕ Adding card to wishlist:', { userId: user.id, cardId });
+      
       const { data, error } = await supabase
         .from('wishlists')
         .insert({
@@ -108,11 +116,17 @@ export function useAddToWishlist() {
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error adding to wishlist:', error);
+        throw error;
+      }
+      
+      console.log('✅ Successfully added to wishlist:', data);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+      queryClient.invalidateQueries({ queryKey: ['wishlist-check'] });
       toast({
         title: "¡Agregada a wishlist!",
         description: "La carta fue agregada a tu wishlist",
@@ -120,7 +134,7 @@ export function useAddToWishlist() {
       });
     },
     onError: (error) => {
-      console.error('Error adding to wishlist:', error);
+      console.error('❌ Error adding to wishlist:', error);
       toast({
         title: "Error",
         description: "No se pudo agregar la carta a la wishlist",
@@ -140,16 +154,43 @@ export function useRemoveFromWishlist() {
     mutationFn: async (cardId: string) => {
       if (!user?.id) throw new Error('User not authenticated');
       
+      console.log('🗑️ Removing card from wishlist:', { userId: user.id, cardId });
+      
+      // First, let's check if the item exists
+      const { data: existingItems, error: checkError } = await supabase
+        .from('wishlists')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('card_id', cardId);
+      
+      if (checkError) {
+        console.error('❌ Error checking existing items:', checkError);
+        throw checkError;
+      }
+      
+      console.log('📋 Existing items to delete:', existingItems);
+      
+      if (!existingItems || existingItems.length === 0) {
+        console.warn('⚠️ No items found to delete');
+        throw new Error('No se encontró la carta en tu wishlist');
+      }
+      
       const { error } = await supabase
         .from('wishlists')
         .delete()
         .eq('user_id', user.id)
         .eq('card_id', cardId);
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error removing from wishlist:', error);
+        throw error;
+      }
+      
+      console.log('✅ Successfully removed from wishlist');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+      queryClient.invalidateQueries({ queryKey: ['wishlist-check'] });
       toast({
         title: "Quitada de wishlist",
         description: "La carta fue quitada de tu wishlist",
@@ -157,7 +198,7 @@ export function useRemoveFromWishlist() {
       });
     },
     onError: (error) => {
-      console.error('Error removing from wishlist:', error);
+      console.error('❌ Error removing from wishlist:', error);
       toast({
         title: "Error",
         description: "No se pudo quitar la carta de la wishlist",
@@ -184,7 +225,7 @@ export function useIsInWishlist(cardId: string) {
         .maybeSingle();
       
       if (error) {
-        console.error('Error checking wishlist:', error);
+        console.error('❌ Error checking wishlist:', error);
         return false;
       }
       
