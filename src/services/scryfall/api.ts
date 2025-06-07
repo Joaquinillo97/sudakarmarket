@@ -59,7 +59,8 @@ export const getAllPrintings = async (cardName: string): Promise<ScryfallCard[]>
   try {
     while (hasMore) {
       const pageParam = currentPage > 1 ? `&page=${currentPage}` : '';
-      const url = `${SCRYFALL_API_BASE}/cards/search?q=${encodeURIComponent(`!"${cardName}"`)}${pageParam}&order=released`;
+      // Use name search instead of exact match to find all printings
+      const url = `${SCRYFALL_API_BASE}/cards/search?q=${encodeURIComponent(`name:"${cardName}"`)}${pageParam}&order=released`;
       
       console.log(`📄 Fetching page ${currentPage}: ${url}`);
       
@@ -69,7 +70,13 @@ export const getAllPrintings = async (cardName: string): Promise<ScryfallCard[]>
       console.log(`✅ Page ${currentPage}: Found ${result.data?.length || 0} cards`);
       
       if (result.data && result.data.length > 0) {
-        allCards.push(...result.data);
+        // Filter to ensure exact name matches (case-insensitive)
+        const exactMatches = result.data.filter(card => 
+          card.name.toLowerCase() === cardName.toLowerCase()
+        );
+        
+        console.log(`🎯 Page ${currentPage}: ${exactMatches.length} exact matches out of ${result.data.length} total`);
+        allCards.push(...exactMatches);
       }
       
       hasMore = result.has_more || false;
