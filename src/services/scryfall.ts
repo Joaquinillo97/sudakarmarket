@@ -1,4 +1,3 @@
-
 // Scryfall API service
 // Documentation: https://scryfall.com/docs/api
 
@@ -173,9 +172,8 @@ export const mapScryfallCardToAppCard = (card: ScryfallCard): AppCard => {
     imageUrl = card.card_faces[0].image_uris.normal;
   }
   
-  // Convert price from USD to ARS (using real exchange rate from an API in production)
+  // Use USD price directly from Scryfall
   const usdPrice = parseFloat(card.prices.usd || card.prices.usd_foil || '0');
-  const arsPrice = Math.round(usdPrice * 1000); // 1 USD = 1000 ARS (approximate rate)
   
   // Map language code to display name
   const language = languageMap[card.lang] || 'Desconocido';
@@ -188,7 +186,7 @@ export const mapScryfallCardToAppCard = (card: ScryfallCard): AppCard => {
     name: card.name,
     set: card.set_name,
     imageUrl: imageUrl,
-    price: arsPrice,
+    price: usdPrice,
     condition: "Near Mint", // Default condition
     language: language,
     color: color

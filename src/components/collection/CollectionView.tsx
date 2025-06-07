@@ -212,7 +212,7 @@ const CollectionView = () => {
         </div>
         <div className="bg-muted rounded-lg p-3">
           <p className="text-muted-foreground">Valor total</p>
-          <p className="text-2xl font-bold">${totalValue.toLocaleString()}</p>
+          <p className="text-2xl font-bold">${totalValue.toFixed(2)}</p>
         </div>
         <div className="bg-muted rounded-lg p-3">
           <p className="text-muted-foreground">Para intercambio</p>
@@ -231,7 +231,7 @@ const CollectionView = () => {
                   <TableHead>Cant.</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead>Idioma</TableHead>
-                  <TableHead className="text-right">Precio (ARS)</TableHead>
+                  <TableHead className="text-right">Precio (USD)</TableHead>
                   <TableHead>Para trade</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
@@ -244,7 +244,7 @@ const CollectionView = () => {
                     <TableCell>{card.quantity}</TableCell>
                     <TableCell>{card.condition}</TableCell>
                     <TableCell>{card.language}</TableCell>
-                    <TableCell className="text-right">${card.price.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">${card.price.toFixed(2)}</TableCell>
                     <TableCell>
                       <Switch
                         checked={card.forTrade}
@@ -344,7 +344,7 @@ const CollectionView = () => {
                   <span className="text-muted-foreground">Idioma:</span> {selectedCard.language}
                 </p>
                 <p className="text-sm">
-                  <span className="text-muted-foreground">Precio:</span> ${selectedCard.price.toLocaleString()}
+                  <span className="text-muted-foreground">Precio:</span> ${selectedCard.price.toFixed(2)}
                 </p>
                 <div className="flex items-center justify-between pt-2">
                   <span className="text-sm">Disponible para intercambio</span>

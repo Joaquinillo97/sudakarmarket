@@ -132,7 +132,7 @@ const CardItem = ({
           </span>
         )}
         <span className="font-bold">
-          ${price.toLocaleString()}
+          ${price.toFixed(2)}
         </span>
       </CardFooter>
     </Card>
