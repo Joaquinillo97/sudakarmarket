@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
@@ -25,19 +26,16 @@ const ProfilePage = () => {
       
       const { data, error } = await supabase
         .from('user_inventory')
-        .select(`
-          *,
-          cards(*)
-        `)
+        .select('*')
         .eq('user_id', user.id);
         
       if (error) throw error;
       
       return data.map((item) => ({
         id: item.id,
-        name: item.cards?.name || 'Carta sin nombre',
-        set: item.cards?.set_name || 'Set desconocido',
-        imageUrl: item.cards?.image_uri || '',
+        name: `Carta ${item.card_id}`, // Placeholder name since we don't have card details
+        set: 'Set desconocido',
+        imageUrl: '',
         price: item.price,
         seller: { 
           id: user.id, 
@@ -47,7 +45,7 @@ const ProfilePage = () => {
         condition: item.condition,
         language: item.language,
         quantity: item.quantity,
-        color: "colorless", // Default color, could be enhanced
+        color: "colorless", // Default color
       }));
     },
     enabled: !!user?.id && isAuthenticated
@@ -61,19 +59,16 @@ const ProfilePage = () => {
       
       const { data, error } = await supabase
         .from('wishlists')
-        .select(`
-          *,
-          cards(*)
-        `)
+        .select('*')
         .eq('user_id', user.id);
         
       if (error) throw error;
       
       return data.map((item) => ({
         id: item.id,
-        name: item.cards?.name || 'Carta sin nombre',
-        set: item.cards?.set_name || 'Set desconocido',
-        imageUrl: item.cards?.image_uri || '',
+        name: `Carta ${item.card_id}`, // Placeholder name since we don't have card details
+        set: 'Set desconocido',
+        imageUrl: '',
         price: 0, // Wishlist items don't have prices
         seller: { 
           id: user.id, 

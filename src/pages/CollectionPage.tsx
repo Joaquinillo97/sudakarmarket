@@ -83,11 +83,11 @@ const CollectionPage = () => {
           </TabsContent>
       
           <TabsContent value="add" className="mt-0">
-            <ManualCardEntry onSuccess={handleCardAddSuccess} />
+            <ManualCardEntry />
           </TabsContent>
       
           <TabsContent value="import" className="mt-0">
-            <BulkImport onSuccess={handleBulkImportSuccess} />
+            <BulkImport />
           </TabsContent>
         </Tabs>
       </div>

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -57,10 +58,7 @@ const SellersPage = () => {
       
       const { data, error } = await supabase
         .from('user_inventory')
-        .select(`
-          *,
-          cards(*)
-        `)
+        .select('*')
         .eq('user_id', selectedSeller)
         .eq('for_trade', true); // Only get cards marked for trade
         
@@ -69,9 +67,9 @@ const SellersPage = () => {
       // Transform inventory items into card format
       return data.map((item): SellerCard => ({
         id: item.id,
-        name: item.cards?.name || 'Carta sin nombre',
-        set: item.cards?.set_name || 'Set desconocido',
-        imageUrl: item.cards?.image_uri || '',
+        name: `Carta ${item.card_id}`, // Placeholder name since we don't have card details
+        set: 'Set desconocido',
+        imageUrl: '',
         price: item.price,
         seller: { 
           id: item.user_id, 
