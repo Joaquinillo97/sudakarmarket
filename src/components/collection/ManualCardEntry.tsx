@@ -1,341 +1,190 @@
+
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useLocalCardAutocomplete } from "@/hooks/use-local-cards";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Plus, AlertCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { toast } from "sonner";
 
-// Card conditions
-const CARD_CONDITIONS = [
-  { label: "Mint (M)", value: "M" },
-  { label: "Near Mint (NM)", value: "NM" },
-  { label: "Excellent (EX)", value: "EX" },
-  { label: "Good (GD)", value: "GD" },
-  { label: "Light Played (LP)", value: "LP" },
-  { label: "Played (PL)", value: "PL" },
-  { label: "Poor (PR)", value: "PR" },
-];
-
-// Card languages
-const CARD_LANGUAGES = [
-  { label: "Español", value: "es" },
-  { label: "Inglés", value: "en" },
-  { label: "Italiano", value: "it" },
-  { label: "Francés", value: "fr" },
-  { label: "Alemán", value: "de" },
-  { label: "Portugués", value: "pt" },
-  { label: "Japonés", value: "jp" },
-  { label: "Coreano", value: "kr" },
-  { label: "Ruso", value: "ru" },
-  { label: "Chino Simplificado", value: "cs" },
-  { label: "Chino Tradicional", value: "ct" },
-];
-
-// Form validation schema
-const cardFormSchema = z.object({
-  name: z.string().min(2, "El nombre es requerido"),
-  set: z.string().min(1, "La edición es requerida"),
-  language: z.string().min(1, "El idioma es requerido"),
-  condition: z.string().min(1, "La condición es requerida"),
-  quantity: z.coerce.number().min(1, "La cantidad mínima es 1"),
-  price: z.coerce.number().min(0, "El precio no puede ser negativo"),
-  forTrade: z.boolean().default(true),
-});
-
-type CardFormValues = z.infer<typeof cardFormSchema>;
-
-interface ManualCardEntryProps {
-  onSuccess: () => void;
-}
-
-const ManualCardEntry = ({ onSuccess }: ManualCardEntryProps) => {
+const ManualCardEntry = () => {
+  const [formData, setFormData] = useState({
+    cardName: "",
+    cardSet: "",
+    quantity: 1,
+    condition: "NM",
+    language: "Español",
+    price: 0,
+    forTrade: false,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [cardQuery, setCardQuery] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const { toast } = useToast();
   const { user } = useAuth();
 
-  const form = useForm<CardFormValues>({
-    resolver: zodResolver(cardFormSchema),
-    defaultValues: {
-      name: "",
-      set: "",
-      language: "es",
-      condition: "NM",
-      quantity: 1,
-      price: 0,
-      forTrade: true,
-    },
-  });
-
-  // Use local card autocomplete instead of Scryfall
-  const { data: filteredCards = [] } = useLocalCardAutocomplete(cardQuery);
-
-  // Filter cards based on input
-  const handleNameChange = (value: string) => {
-    setCardQuery(value);
-    setShowSuggestions(value.length >= 2);
-  };
-
-  const selectSuggestion = (cardName: string) => {
-    form.setValue("name", cardName);
-    setShowSuggestions(false);
-    setCardQuery(cardName);
-  };
-
-  const onSubmit = async (data: CardFormValues) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!user) {
-      toast.error("Debes iniciar sesión para agregar cartas");
+      toast({
+        title: "Error",
+        description: "Debes estar autenticado para agregar cartas",
+        variant: "destructive"
+      });
       return;
     }
-    
+
     setIsSubmitting(true);
     
     try {
-      // First check if the card exists in our local database
-      let { data: existingCard, error: cardError } = await supabase
-        .from('cards')
-        .select('id, scryfall_id')
-        .eq('name', data.name)
-        .eq('set_name', data.set)
-        .maybeSingle();
-        
-      let cardId;
-      
-      if (cardError || !existingCard) {
-        toast.error("Carta no encontrada en la base de datos. Primero sincroniza las cartas de Scryfall.");
-        return;
-      } else {
-        cardId = existingCard.id;
-      }
-      
-      // Add the card to the user's inventory
-      const { error: inventoryError } = await supabase
-        .from('user_inventory')
-        .insert({
-          card_id: cardId,
-          quantity: data.quantity,
-          condition: data.condition as any,
-          language: data.language as any,
-          price: data.price,
-          for_trade: data.forTrade,
-          user_id: user.id
-        });
-        
-      if (inventoryError) {
-        throw inventoryError;
-      }
-      
-      toast.success("Carta agregada correctamente");
-      onSuccess();
-      
+      // Temporarily disable manual entry functionality
+      toast({
+        title: "Funcionalidad deshabilitada",
+        description: "La entrada manual está temporalmente deshabilitada",
+        variant: "destructive"
+      });
     } catch (error) {
-      console.error("Error adding card:", error);
-      toast.error("Error al agregar la carta");
+      console.error('Error adding card:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo agregar la carta a tu colección",
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Agregar Carta Manualmente</CardTitle>
-        <CardDescription>Cargá los detalles de tu carta para agregarla a tu colección</CardDescription>
+        <CardTitle className="flex items-center gap-2">
+          <Plus className="h-5 w-5" />
+          Agregar carta manualmente
+        </CardTitle>
+        <CardDescription>
+          Agrega una carta específica a tu colección
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem className="relative">
-                    <FormLabel>Nombre de la Carta</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(e);
-                          handleNameChange(e.target.value);
-                        }}
-                        placeholder="Ej: Lightning Bolt"
-                        autoComplete="off"
-                      />
-                    </FormControl>
-                    {showSuggestions && filteredCards.length > 0 && (
-                      <div className="absolute z-10 mt-1 w-full bg-background shadow-lg rounded-md border">
-                        <ul className="max-h-60 overflow-auto py-1">
-                          {filteredCards.map((card, index) => (
-                            <li
-                              key={index}
-                              className="px-3 py-2 hover:bg-accent cursor-pointer text-sm"
-                              onClick={() => selectSuggestion(card)}
-                            >
-                              {card}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="set"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Edición</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder="Ej: Commander Legends"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="language"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Idioma</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecciona el idioma" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {CARD_LANGUAGES.map((language) => (
-                            <SelectItem key={language.value} value={language.value}>{language.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="condition"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Condición</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecciona la condición" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {CARD_CONDITIONS.map((condition) => (
-                            <SelectItem key={condition.value} value={condition.value}>
-                              {condition.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="quantity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cantidad</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="1" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Precio (ARS)</FormLabel>
-                    <FormControl>
-                      <Input type="number" min="0" step="100" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="forTrade"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                    <div className="space-y-0.5">
-                      <FormLabel>Disponible para intercambio</FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        Esta carta aparecerá en tu perfil público para intercambios
-                      </p>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
+        <Alert className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Esta funcionalidad está temporalmente deshabilitada mientras se actualiza el sistema.
+          </AlertDescription>
+        </Alert>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label htmlFor="card-name" className="block text-sm font-medium">
+                Nombre de la carta
+              </label>
+              <Input
+                id="card-name"
+                value={formData.cardName}
+                onChange={(e) => handleInputChange("cardName", e.target.value)}
+                placeholder="Ej: Lightning Bolt"
+                disabled
               />
             </div>
 
-            <CardFooter className="px-0">
-              <Button 
-                type="submit" 
-                className="w-full md:w-auto" 
-                disabled={isSubmitting}
+            <div className="space-y-2">
+              <label htmlFor="card-set" className="block text-sm font-medium">
+                Edición
+              </label>
+              <Input
+                id="card-set"
+                value={formData.cardSet}
+                onChange={(e) => handleInputChange("cardSet", e.target.value)}
+                placeholder="Ej: Streets of New Capenna"
+                disabled
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="quantity" className="block text-sm font-medium">
+                Cantidad
+              </label>
+              <Input
+                id="quantity"
+                type="number"
+                min="1"
+                value={formData.quantity}
+                onChange={(e) => handleInputChange("quantity", parseInt(e.target.value))}
+                disabled
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="condition" className="block text-sm font-medium">
+                Estado
+              </label>
+              <Select
+                value={formData.condition}
+                onValueChange={(value) => handleInputChange("condition", value)}
+                disabled
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Agregando...
-                  </>
-                ) : (
-                  "Agregar a mi colección"
-                )}
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NM">Near Mint (NM)</SelectItem>
+                  <SelectItem value="SP">Slightly Played (SP)</SelectItem>
+                  <SelectItem value="MP">Moderately Played (MP)</SelectItem>
+                  <SelectItem value="HP">Heavily Played (HP)</SelectItem>
+                  <SelectItem value="DMG">Damaged (DMG)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="language" className="block text-sm font-medium">
+                Idioma
+              </label>
+              <Select
+                value={formData.language}
+                onValueChange={(value) => handleInputChange("language", value)}
+                disabled
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona idioma" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Español">Español</SelectItem>
+                  <SelectItem value="Inglés">Inglés</SelectItem>
+                  <SelectItem value="Portugués">Portugués</SelectItem>
+                  <SelectItem value="Japonés">Japonés</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="price" className="block text-sm font-medium">
+                Precio (ARS)
+              </label>
+              <Input
+                id="price"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => handleInputChange("price", parseFloat(e.target.value))}
+                placeholder="0.00"
+                disabled
+              />
+            </div>
+          </div>
+
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? "Agregando..." : "Agregar a mi colección"}
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );

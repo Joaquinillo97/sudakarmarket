@@ -39,19 +39,16 @@ const CollectionView = () => {
       
       const { data, error } = await supabase
         .from('user_inventory')
-        .select(`
-          *,
-          cards(*)
-        `)
+        .select('*')
         .eq('user_id', user.id);
         
       if (error) throw error;
       
       return data.map((item) => ({
         id: item.id,
-        name: item.cards?.name || 'Carta sin nombre',
-        set: item.cards?.set_name || 'Set desconocido',
-        imageUrl: item.cards?.image_uri || '',
+        name: `Carta ${item.card_id}`, // Placeholder name since we don't have card details
+        set: 'Set desconocido',
+        imageUrl: '',
         quantity: item.quantity,
         condition: item.condition,
         language: item.language,
