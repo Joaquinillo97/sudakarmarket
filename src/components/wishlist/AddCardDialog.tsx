@@ -1,26 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { useAddToWishlist } from "@/hooks/use-wishlist";
 import { getCardByName, getAllPrintings } from "@/services/scryfall";
 import { useToast } from "@/hooks/use-toast";
 import SearchAutocomplete from "@/components/search/SearchAutocomplete";
-
 interface SelectedCard {
   id: string;
   name: string;
@@ -37,32 +24,29 @@ interface SelectedCard {
     card_id: string;
   }>;
 }
-
 const AddCardDialog = () => {
   const [open, setOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<SelectedCard | null>(null);
   const [selectedSet, setSelectedSet] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const addToWishlistMutation = useAddToWishlist();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleCardSearch = async (cardName: string) => {
     if (!cardName.trim()) return;
-    
     setIsLoading(true);
     console.log(`🔍 Starting search for: "${cardName}"`);
-    
     try {
       // Buscar la carta por nombre exacto
       console.log('📥 Fetching card by exact name...');
       const card = await getCardByName(cardName);
       console.log('✅ Found card:', card.name);
-      
+
       // Obtener todas las ediciones de esta carta
       console.log('📚 Fetching all printings...');
       const printings = await getAllPrintings(card.name);
       console.log(`📊 Total printings found: ${printings.length}`);
-      
       const cardData: SelectedCard = {
         id: card.id,
         name: card.name,
@@ -79,7 +63,6 @@ const AddCardDialog = () => {
           card_id: print.id
         }))
       };
-      
       console.log(`🎯 Card data prepared with ${cardData.sets.length} sets`);
       setSelectedCard(cardData);
     } catch (error) {
@@ -93,10 +76,8 @@ const AddCardDialog = () => {
       setIsLoading(false);
     }
   };
-
   const handleAddToWishlist = async () => {
     if (!selectedCard) return;
-
     if (selectedSet === "all") {
       // Agregar todas las ediciones
       for (const set of selectedCard.sets) {
@@ -108,7 +89,7 @@ const AddCardDialog = () => {
       }
       toast({
         title: "¡Agregadas a wishlist!",
-        description: `Se agregaron ${selectedCard.sets.length} ediciones de ${selectedCard.name}`,
+        description: `Se agregaron ${selectedCard.sets.length} ediciones de ${selectedCard.name}`
       });
     } else {
       // Agregar solo la edición específica
@@ -123,14 +104,11 @@ const AddCardDialog = () => {
     setSelectedSet("");
     setOpen(false);
   };
-
   const handleReset = () => {
     setSelectedCard(null);
     setSelectedSet("");
   };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
+  return <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
@@ -143,50 +121,33 @@ const AddCardDialog = () => {
         </DialogHeader>
         
         <div className="space-y-4">
-          {!selectedCard ? (
-            <div className="flex flex-col items-center justify-center py-8 pb-12">
+          {!selectedCard ? <div className="flex flex-col  justify-center pb-12 py-[100px] px-0">
               <label className="block text-sm font-medium mb-4 text-center">
                 Buscar carta
               </label>
               <div className="w-full max-w-md">
-                <SearchAutocomplete
-                  onSearch={handleCardSearch}
-                  placeholder="Escribe el nombre de la carta..."
-                  className="w-full"
-                />
+                <SearchAutocomplete onSearch={handleCardSearch} placeholder="Escribe el nombre de la carta..." className="w-full" />
               </div>
-              {isLoading && (
-                <p className="text-sm text-muted-foreground mt-4 text-center">
+              {isLoading && <p className="text-sm text-muted-foreground mt-4 text-center">
                   Buscando carta y todas sus ediciones...
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-4">
+                </p>}
+            </div> : <div className="space-y-4">
               <Card>
                 <CardContent className="p-4">
                   <div className="flex gap-4">
                     <div className="flex-shrink-0">
-                      <img 
-                        src={selectedCard.imageUrl} 
-                        alt={selectedCard.name}
-                        className="w-48 h-auto rounded"
-                      />
+                      <img src={selectedCard.imageUrl} alt={selectedCard.name} className="w-48 h-auto rounded" />
                     </div>
                     <div className="flex-1 space-y-2">
                       <h3 className="text-lg font-bold">{selectedCard.name}</h3>
-                      {selectedCard.manaCost && (
-                        <p className="text-sm text-muted-foreground">
+                      {selectedCard.manaCost && <p className="text-sm text-muted-foreground">
                           {selectedCard.manaCost}
-                        </p>
-                      )}
+                        </p>}
                       <p className="text-sm font-medium">{selectedCard.type}</p>
                       <p className="text-sm leading-relaxed">{selectedCard.text}</p>
-                      {selectedCard.power && selectedCard.toughness && (
-                        <p className="text-sm font-medium">
+                      {selectedCard.power && selectedCard.toughness && <p className="text-sm font-medium">
                           {selectedCard.power}/{selectedCard.toughness}
-                        </p>
-                      )}
+                        </p>}
                       <div className="bg-muted p-2 rounded">
                         <p className="text-xs font-medium text-muted-foreground">
                           Ediciones encontradas: {selectedCard.sets.length}
@@ -209,33 +170,24 @@ const AddCardDialog = () => {
                     <SelectItem value="all">
                       Todas las ediciones ({selectedCard.sets.length})
                     </SelectItem>
-                    {selectedCard.sets.map((set) => (
-                      <SelectItem key={set.set_id} value={set.set_id}>
+                    {selectedCard.sets.map(set => <SelectItem key={set.set_id} value={set.set_id}>
                         {set.set_name} (#{set.collector_number})
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex gap-3">
-                <Button 
-                  onClick={handleAddToWishlist}
-                  disabled={!selectedSet || addToWishlistMutation.isPending}
-                  className="flex-1"
-                >
+                <Button onClick={handleAddToWishlist} disabled={!selectedSet || addToWishlistMutation.isPending} className="flex-1">
                   {addToWishlistMutation.isPending ? "Agregando..." : "Agregar a wishlist"}
                 </Button>
                 <Button variant="outline" onClick={handleReset}>
                   Buscar otra carta
                 </Button>
               </div>
-            </div>
-          )}
+            </div>}
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
-
 export default AddCardDialog;
