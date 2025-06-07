@@ -94,6 +94,26 @@ export const getCardById = async (id: string): Promise<ScryfallCard> => {
   return handleResponse<ScryfallCard>(response);
 };
 
+// Get card by exact name
+export const getCardByName = async (name: string): Promise<ScryfallCard> => {
+  const url = `${SCRYFALL_API_BASE}/cards/named?exact=${encodeURIComponent(name)}`;
+  const response = await fetch(url);
+  return handleResponse<ScryfallCard>(response);
+};
+
+// Get all printings of a card by name
+export const getAllPrintings = async (cardName: string): Promise<ScryfallCard[]> => {
+  const url = `${SCRYFALL_API_BASE}/cards/search?q=${encodeURIComponent(`!"${cardName}"`)}`;
+  try {
+    const response = await fetch(url);
+    const result = await handleResponse<ScryfallListResponse>(response);
+    return result.data || [];
+  } catch (error) {
+    console.error('Error fetching card printings:', error);
+    return [];
+  }
+};
+
 // Get autocomplete suggestions
 export const getAutocompleteSuggestions = async (query: string): Promise<string[]> => {
   if (!query || query.length < 2) return [];

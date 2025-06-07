@@ -3,6 +3,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CardGrid from "@/components/cards/CardGrid";
 import UserMatches from "@/components/matches/UserMatches";
+import AddCardDialog from "@/components/wishlist/AddCardDialog";
 import { Button } from "@/components/ui/button";
 import { 
   Card,
@@ -62,6 +63,7 @@ const WishlistPage = () => {
               <ImportIcon className="mr-2 h-4 w-4" />
               Importar de Moxfield
             </Button>
+            <AddCardDialog />
             <Button size="sm" asChild>
               <Link to="/cards">
                 <SearchIcon className="mr-2 h-4 w-4" />
@@ -85,12 +87,15 @@ const WishlistPage = () => {
                 <p className="text-muted-foreground text-center mb-4">
                   No tienes cartas en tu wishlist. ¡Agrega algunas para empezar!
                 </p>
-                <Button asChild>
-                  <Link to="/cards">
-                    <SearchIcon className="mr-2 h-4 w-4" />
-                    Buscar cartas
-                  </Link>
-                </Button>
+                <div className="flex gap-2">
+                  <AddCardDialog />
+                  <Button variant="outline" asChild>
+                    <Link to="/cards">
+                      <SearchIcon className="mr-2 h-4 w-4" />
+                      Buscar cartas
+                    </Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ) : (
