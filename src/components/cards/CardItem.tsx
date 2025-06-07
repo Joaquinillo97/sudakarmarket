@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Heart, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useIsInWishlist, useAddToWishlist, useRemoveFromWishlist } from "@/hooks/use-wishlist";
+import { useIsInWishlist, useAddToWishlist, useRemoveFromWishlist, useRemoveFromWishlistById } from "@/hooks/use-wishlist";
 
 interface CardItemProps {
   id: string;
@@ -31,7 +31,8 @@ interface CardItemProps {
   condition: string;
   language: string;
   color?: string;
-  isWishlistView?: boolean; // Nueva prop para indicar si estamos en la vista de wishlist
+  isWishlistView?: boolean;
+  card_id?: string; // Solo necesario para vistas que no son wishlist
 }
 
 const CardItem = ({
@@ -44,12 +45,18 @@ const CardItem = ({
   condition,
   language,
   color = "colorless",
-  isWishlistView = false
+  isWishlistView = false,
+  card_id
 }: CardItemProps) => {
   const { isAuthenticated } = useAuth();
-  const { data: isInWishlist = false } = useIsInWishlist(id);
+  
+  // Para verificar si está en wishlist, usamos card_id si está disponible, sino id
+  const cardIdForCheck = card_id || id;
+  const { data: isInWishlist = false } = useIsInWishlist(cardIdForCheck);
+  
   const addToWishlistMutation = useAddToWishlist();
   const removeFromWishlistMutation = useRemoveFromWishlist();
+  const removeFromWishlistByIdMutation = useRemoveFromWishlistById();
 
   const colorClass = `mtg-${color.toLowerCase()}`;
 
@@ -59,18 +66,27 @@ const CardItem = ({
     }
 
     if (isInWishlist) {
-      removeFromWishlistMutation.mutate(id);
+      removeFromWishlistMutation.mutate(cardIdForCheck);
     } else {
-      addToWishlistMutation.mutate(id);
+      addToWishlistMutation.mutate(cardIdForCheck);
     }
   };
 
   const handleRemoveFromWishlist = () => {
     if (!isAuthenticated) return;
-    removeFromWishlistMutation.mutate(id);
+    
+    if (isWishlistView) {
+      // En vista de wishlist, usar el ID de la fila para eliminar
+      removeFromWishlistByIdMutation.mutate(id);
+    } else {
+      // En otras vistas, usar el card_id
+      removeFromWishlistMutation.mutate(cardIdForCheck);
+    }
   };
 
-  const isLoading = addToWishlistMutation.isPending || removeFromWishlistMutation.isPending;
+  const isLoading = addToWishlistMutation.isPending || 
+                   removeFromWishlistMutation.isPending || 
+                   removeFromWishlistByIdMutation.isPending;
 
   return (
     <Card className={`mtg-card overflow-hidden h-full`}>
@@ -78,7 +94,7 @@ const CardItem = ({
       <CardHeader className="p-3">
         <div className="flex justify-between items-start">
           <Link 
-            to={`/cards/${id}`}
+            to={`/cards/${cardIdForCheck}`}
             className="font-medium text-sm hover:text-primary line-clamp-2 min-h-[40px]"
           >
             {name}
@@ -133,7 +149,7 @@ const CardItem = ({
         </div>
       </CardHeader>
       <CardContent className="p-3 pt-0">
-        <Link to={`/cards/${id}`} className="block mb-3">
+        <Link to={`/cards/${cardIdForCheck}`} className="block mb-3">
           <img 
             src={imageUrl} 
             alt={name} 

@@ -16,6 +16,7 @@ interface Card {
   condition: string;
   language: string;
   color?: string;
+  card_id?: string; // Para distinguir entre el ID de la fila y el ID de Scryfall
 }
 
 interface CardGridProps {
@@ -41,7 +42,11 @@ const CardGrid = ({ cards, isLoading = false, isWishlistView = false }: CardGrid
         </div>
       ) : (
         cards.map((card) => (
-          <CardItem key={card.id} {...card} isWishlistView={isWishlistView} />
+          <CardItem 
+            key={card.id} 
+            {...card} 
+            isWishlistView={isWishlistView}
+          />
         ))
       )}
     </div>

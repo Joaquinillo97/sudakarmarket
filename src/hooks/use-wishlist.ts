@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -144,7 +143,7 @@ export function useAddToWishlist() {
   });
 }
 
-// Hook to remove item from wishlist
+// Hook to remove item from wishlist by card_id
 export function useRemoveFromWishlist() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -199,6 +198,51 @@ export function useRemoveFromWishlist() {
     },
     onError: (error) => {
       console.error('❌ Error removing from wishlist:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo quitar la carta de la wishlist",
+        variant: "destructive",
+      });
+    }
+  });
+}
+
+// Hook to remove item from wishlist by wishlist row ID
+export function useRemoveFromWishlistById() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (wishlistRowId: string) => {
+      if (!user?.id) throw new Error('User not authenticated');
+      
+      console.log('🗑️ Removing wishlist item by ID:', { userId: user.id, wishlistRowId });
+      
+      const { error } = await supabase
+        .from('wishlists')
+        .delete()
+        .eq('id', wishlistRowId)
+        .eq('user_id', user.id); // Extra security check
+      
+      if (error) {
+        console.error('❌ Error removing from wishlist by ID:', error);
+        throw error;
+      }
+      
+      console.log('✅ Successfully removed from wishlist by ID');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+      queryClient.invalidateQueries({ queryKey: ['wishlist-check'] });
+      toast({
+        title: "Quitada de wishlist",
+        description: "La carta fue quitada de tu wishlist",
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      console.error('❌ Error removing from wishlist by ID:', error);
       toast({
         title: "Error",
         description: "No se pudo quitar la carta de la wishlist",
