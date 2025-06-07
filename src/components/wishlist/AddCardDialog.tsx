@@ -138,22 +138,24 @@ const AddCardDialog = () => {
           Agregar carta
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[95vh] h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Agregar carta a wishlist</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6">
+        <div className="space-y-6 h-full">
           {!selectedCard ? (
-            <div>
+            <div className="h-full flex flex-col">
               <label className="block text-sm font-medium mb-3">
                 Buscar carta
               </label>
-              <SearchAutocomplete
-                onSearch={handleCardSearch}
-                placeholder="Escribe el nombre de la carta..."
-                className="w-full"
-              />
+              <div className="flex-1">
+                <SearchAutocomplete
+                  onSearch={handleCardSearch}
+                  placeholder="Escribe el nombre de la carta..."
+                  className="w-full"
+                />
+              </div>
               {isLoading && (
                 <p className="text-sm text-muted-foreground mt-3">
                   Buscando carta y todas sus ediciones...
