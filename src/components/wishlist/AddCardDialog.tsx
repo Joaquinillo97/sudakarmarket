@@ -8,6 +8,7 @@ import { useAddToWishlist } from "@/hooks/use-wishlist";
 import { getCardByName, getAllPrintings } from "@/services/scryfall";
 import { useToast } from "@/hooks/use-toast";
 import SearchAutocomplete from "@/components/search/SearchAutocomplete";
+
 interface SelectedCard {
   id: string;
   name: string;
@@ -121,7 +122,7 @@ const AddCardDialog = () => {
         </DialogHeader>
         
         <div className="space-y-4">
-          {!selectedCard ? <div className="flex flex-col items-center justify-start pt-8 pb-16 px-0">
+          {!selectedCard ? <div className="flex flex-col items-center justify-start pt-4 pb-16 px-0">
               <label className="block text-sm font-medium mb-4 text-center">
                 Buscar carta
               </label>
