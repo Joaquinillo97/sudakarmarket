@@ -39,9 +39,7 @@ const Navbar = () => {
 
   // Define protected navigation links (visible only to authenticated users)
   const protectedNavItems = [
-    { label: "Mi Colección", path: "/collection" },
     { label: "Wishlist", path: "/wishlist" },
-    { label: "Mi Perfil", path: "/profile" },
   ];
 
   return (
@@ -107,12 +105,6 @@ const Navbar = () => {
                   {user?.username || 'Mi cuenta'}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Link to="/profile" className="w-full">Perfil</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link to="/collection" className="w-full">Mi colección</Link>
-                </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Link to="/wishlist" className="w-full">Mi wishlist</Link>
                 </DropdownMenuItem>

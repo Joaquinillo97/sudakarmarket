@@ -9,9 +9,7 @@ import Index from "./pages/Index";
 import CardsPage from "./pages/CardsPage";
 import CardDetailsPage from "./pages/CardDetailsPage";
 import WishlistPage from "./pages/WishlistPage";
-import ProfilePage from "./pages/ProfilePage";
 import SellersPage from "./pages/SellersPage";
-import CollectionPage from "./pages/CollectionPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -36,9 +34,9 @@ const App = () => (
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/wishlist" element={<WishlistPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/collection" element={<CollectionPage />} />
-              <Route path="/import" element={<Navigate to="/collection" />} />
+              <Route path="/collection" element={<Navigate to="/wishlist" />} />
+              <Route path="/profile" element={<Navigate to="/wishlist" />} />
+              <Route path="/import" element={<Navigate to="/wishlist" />} />
             </Route>
             
             {/* 404 route */}
