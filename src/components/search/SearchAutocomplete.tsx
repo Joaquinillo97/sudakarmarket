@@ -48,7 +48,7 @@ const SearchAutocomplete = ({
   };
 
   return (
-    <div className={`relative w-full h-full ${className}`}>
+    <div className={`relative w-full ${className}`}>
       <form onSubmit={handleSubmit} className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
@@ -63,7 +63,7 @@ const SearchAutocomplete = ({
       </form>
       
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-80 overflow-auto">
+        <div className="fixed z-[9999] w-full mt-1 bg-background border rounded-md shadow-lg max-h-80 overflow-auto">
           {suggestions.map((suggestion, index) => (
             <button
               key={index}
