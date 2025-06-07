@@ -13,7 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Heart } from "lucide-react";
+import { Heart, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsInWishlist, useAddToWishlist, useRemoveFromWishlist } from "@/hooks/use-wishlist";
 
@@ -31,6 +31,7 @@ interface CardItemProps {
   condition: string;
   language: string;
   color?: string;
+  isWishlistView?: boolean; // Nueva prop para indicar si estamos en la vista de wishlist
 }
 
 const CardItem = ({
@@ -42,7 +43,8 @@ const CardItem = ({
   seller,
   condition,
   language,
-  color = "colorless"
+  color = "colorless",
+  isWishlistView = false
 }: CardItemProps) => {
   const { isAuthenticated } = useAuth();
   const { data: isInWishlist = false } = useIsInWishlist(id);
@@ -53,7 +55,6 @@ const CardItem = ({
 
   const handleWishlistToggle = () => {
     if (!isAuthenticated) {
-      // Could show a toast or redirect to login
       return;
     }
 
@@ -62,6 +63,11 @@ const CardItem = ({
     } else {
       addToWishlistMutation.mutate(id);
     }
+  };
+
+  const handleRemoveFromWishlist = () => {
+    if (!isAuthenticated) return;
+    removeFromWishlistMutation.mutate(id);
   };
 
   const isLoading = addToWishlistMutation.isPending || removeFromWishlistMutation.isPending;
@@ -78,26 +84,51 @@ const CardItem = ({
             {name}
           </Link>
           {isAuthenticated && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-7 w-7" 
-                    onClick={handleWishlistToggle}
-                    disabled={isLoading}
-                  >
-                    <Heart 
-                      className={`h-4 w-4 ${isInWishlist ? "fill-red-500 text-red-500" : ""}`} 
-                    />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {isInWishlist ? "Quitar de wishlist" : "¡Agregar a wishlist!"}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div className="flex gap-1">
+              {isWishlistView ? (
+                // En la vista de wishlist, mostrar botón de eliminación
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7" 
+                        onClick={handleRemoveFromWishlist}
+                        disabled={isLoading}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Quitar de wishlist
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                // En otras vistas, mostrar corazón para agregar/quitar
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7" 
+                        onClick={handleWishlistToggle}
+                        disabled={isLoading}
+                      >
+                        <Heart 
+                          className={`h-4 w-4 ${isInWishlist ? "fill-red-500 text-red-500" : ""}`} 
+                        />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {isInWishlist ? "Quitar de wishlist" : "¡Agregar a wishlist!"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
           )}
         </div>
       </CardHeader>

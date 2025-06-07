@@ -85,7 +85,7 @@ const WishlistPage = () => {
               </CardContent>
             </Card>
           ) : (
-            <CardGrid cards={wishlistCards} isLoading={isLoadingWishlist} />
+            <CardGrid cards={wishlistCards} isLoading={isLoadingWishlist} isWishlistView={true} />
           )}
         </div>
       </main>
