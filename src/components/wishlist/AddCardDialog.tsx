@@ -121,7 +121,7 @@ const AddCardDialog = () => {
         </DialogHeader>
         
         <div className="space-y-4">
-          {!selectedCard ? <div className="flex flex-col  justify-center pb-12 py-[100px] px-0">
+          {!selectedCard ? <div className="flex flex-col items-center justify-start pt-8 pb-16 px-0">
               <label className="block text-sm font-medium mb-4 text-center">
                 Buscar carta
               </label>
