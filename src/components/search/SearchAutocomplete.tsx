@@ -23,7 +23,9 @@ const SearchAutocomplete = ({
   const [query, setQuery] = useState(initialValue);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [isMouseOverSuggestions, setIsMouseOverSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
   
   // Update query when initialValue changes
   useEffect(() => {
@@ -53,6 +55,7 @@ const SearchAutocomplete = ({
   const handleSuggestionClick = (suggestion: string) => {
     setQuery(suggestion);
     setShowSuggestions(false);
+    setIsMouseOverSuggestions(false);
     onSearch(suggestion);
   };
 
@@ -67,8 +70,18 @@ const SearchAutocomplete = ({
   };
 
   const handleBlur = () => {
-    // Delay hiding suggestions to allow clicking on them
-    setTimeout(() => setShowSuggestions(false), 200);
+    // Only hide suggestions if mouse is not over them
+    if (!isMouseOverSuggestions) {
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleMouseEnterSuggestions = () => {
+    setIsMouseOverSuggestions(true);
+  };
+
+  const handleMouseLeaveSuggestions = () => {
+    setIsMouseOverSuggestions(false);
   };
 
   // Render suggestions dropdown using portal
@@ -77,19 +90,22 @@ const SearchAutocomplete = ({
 
     return createPortal(
       <div 
+        ref={suggestionsRef}
         className="fixed bg-background border rounded-md shadow-lg max-h-80 overflow-auto z-[9999]"
         style={{
           top: `${dropdownPosition.top}px`,
           left: `${dropdownPosition.left}px`,
           width: `${dropdownPosition.width}px`
         }}
+        onMouseEnter={handleMouseEnterSuggestions}
+        onMouseLeave={handleMouseLeaveSuggestions}
       >
         {suggestions.map((suggestion, index) => (
           <button
             key={index}
             type="button"
             className="w-full px-4 py-3 text-left hover:bg-accent focus:bg-accent focus:outline-none text-sm border-b last:border-b-0"
-            onClick={() => handleSuggestionClick(suggestion)}
+            onMouseDown={() => handleSuggestionClick(suggestion)}
           >
             <span className="font-medium">{suggestion}</span>
           </button>
