@@ -138,18 +138,18 @@ const AddCardDialog = () => {
           Agregar carta
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[95vh] h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Agregar carta a wishlist</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6 h-full">
+        <div className="space-y-4">
           {!selectedCard ? (
-            <div className="h-full flex flex-col">
-              <label className="block text-sm font-medium mb-3">
+            <div className="flex flex-col items-center justify-center py-8">
+              <label className="block text-sm font-medium mb-4 text-center">
                 Buscar carta
               </label>
-              <div className="flex-1">
+              <div className="w-full max-w-md">
                 <SearchAutocomplete
                   onSearch={handleCardSearch}
                   placeholder="Escribe el nombre de la carta..."
@@ -157,25 +157,25 @@ const AddCardDialog = () => {
                 />
               </div>
               {isLoading && (
-                <p className="text-sm text-muted-foreground mt-3">
+                <p className="text-sm text-muted-foreground mt-4 text-center">
                   Buscando carta y todas sus ediciones...
                 </p>
               )}
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4">
               <Card>
-                <CardContent className="p-6">
-                  <div className="flex gap-6">
+                <CardContent className="p-4">
+                  <div className="flex gap-4">
                     <div className="flex-shrink-0">
                       <img 
                         src={selectedCard.imageUrl} 
                         alt={selectedCard.name}
-                        className="w-56 h-auto rounded"
+                        className="w-48 h-auto rounded"
                       />
                     </div>
-                    <div className="flex-1 space-y-3">
-                      <h3 className="text-xl font-bold">{selectedCard.name}</h3>
+                    <div className="flex-1 space-y-2">
+                      <h3 className="text-lg font-bold">{selectedCard.name}</h3>
                       {selectedCard.manaCost && (
                         <p className="text-sm text-muted-foreground">
                           {selectedCard.manaCost}
@@ -188,8 +188,8 @@ const AddCardDialog = () => {
                           {selectedCard.power}/{selectedCard.toughness}
                         </p>
                       )}
-                      <div className="bg-muted p-3 rounded">
-                        <p className="text-sm font-medium text-muted-foreground">
+                      <div className="bg-muted p-2 rounded">
+                        <p className="text-xs font-medium text-muted-foreground">
                           Ediciones encontradas: {selectedCard.sets.length}
                         </p>
                       </div>
@@ -199,7 +199,7 @@ const AddCardDialog = () => {
               </Card>
 
               <div>
-                <label className="block text-sm font-medium mb-3">
+                <label className="block text-sm font-medium mb-2">
                   Seleccionar edición
                 </label>
                 <Select value={selectedSet} onValueChange={setSelectedSet}>
