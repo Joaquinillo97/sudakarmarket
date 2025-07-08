@@ -32,6 +32,7 @@ interface CardItemProps {
   language: string;
   color?: string;
   isWishlistView?: boolean;
+  isInventoryView?: boolean;
   card_id?: string; // Solo necesario para vistas que no son wishlist
 }
 
@@ -46,6 +47,7 @@ const CardItem = ({
   language,
   color = "colorless",
   isWishlistView = false,
+  isInventoryView = false,
   card_id
 }: CardItemProps) => {
   const { isAuthenticated } = useAuth();

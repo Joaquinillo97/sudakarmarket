@@ -40,6 +40,7 @@ const Navbar = () => {
   // Define protected navigation links (visible only to authenticated users)
   const protectedNavItems = [
     { label: "Wishlist", path: "/wishlist" },
+    { label: "Inventario", path: "/inventory" },
   ];
 
   return (
@@ -107,6 +108,9 @@ const Navbar = () => {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Link to="/wishlist" className="w-full">Mi wishlist</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link to="/inventory" className="w-full">Mi inventario</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Link to="/password-change" className="w-full">Cambiar contraseña</Link>

@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import CardsPage from "./pages/CardsPage";
 import CardDetailsPage from "./pages/CardDetailsPage";
 import WishlistPage from "./pages/WishlistPage";
+import InventoryPage from "./pages/InventoryPage";
 import SellersPage from "./pages/SellersPage";
 import AuthPage from "./pages/AuthPage";
 import PasswordChangePage from "./pages/PasswordChangePage";
@@ -35,8 +36,9 @@ const App = () => (
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/wishlist" element={<WishlistPage />} />
+              <Route path="/inventory" element={<InventoryPage />} />
               <Route path="/password-change" element={<PasswordChangePage />} />
-              <Route path="/collection" element={<Navigate to="/wishlist" />} />
+              <Route path="/collection" element={<Navigate to="/inventory" />} />
               <Route path="/profile" element={<Navigate to="/wishlist" />} />
               <Route path="/import" element={<Navigate to="/wishlist" />} />
             </Route>
