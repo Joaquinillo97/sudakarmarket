@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,12 +11,218 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import CardGrid from "@/components/cards/CardGrid";
-import { ImportIcon, PlusIcon, StarIcon } from "lucide-react";
+import { ImportIcon, PlusIcon, StarIcon, Loader } from "lucide-react";
 
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("inventory");
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editTab, setEditTab] = useState("profile");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Profile form state
+  const [profileForm, setProfileForm] = useState({
+    username: "",
+    email: "",
+  });
+  
+  // Password form state
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const { user, isAuthenticated, isLoading: authLoading, updateProfile, updatePassword } = useAuth();
+  const { toast } = useToast();
+
+  // Update profile form when user data changes
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        username: user.username || "",
+        email: user.email || "",
+      });
+    }
+  }, [user]);
+
+  // Handle profile update
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      await updateProfile({
+        username: profileForm.username,
+        email: profileForm.email,
+      });
+      setIsEditModalOpen(false);
+      toast({
+        title: "Perfil actualizado",
+        description: "Tu perfil se ha actualizado correctamente.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Error al actualizar el perfil",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle password update
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+        throw new Error("Las contraseñas no coinciden");
+      }
+      if (passwordForm.newPassword.length < 6) {
+        throw new Error("La contraseña debe tener al menos 6 caracteres");
+      }
+
+      await updatePassword(passwordForm.newPassword);
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      toast({
+        title: "Contraseña actualizada",
+        description: "Tu contraseña se ha actualizado correctamente.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Error al actualizar la contraseña",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Edit Profile Modal Component
+  const EditProfileModal = () => (
+    <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="w-full">
+          Editar perfil
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Editar perfil</DialogTitle>
+          <DialogDescription>
+            Actualiza tu información personal y configuración de seguridad.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <Tabs value={editTab} onValueChange={setEditTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="profile">Información</TabsTrigger>
+            <TabsTrigger value="password">Contraseña</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="profile" className="space-y-4">
+            <form onSubmit={handleProfileUpdate} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Nombre de usuario</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={profileForm.username}
+                  onChange={(e) => setProfileForm({ ...profileForm, username: e.target.value })}
+                  placeholder="Tu nombre de usuario"
+                  disabled={isSubmitting}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">Correo electrónico</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={profileForm.email}
+                  onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                  placeholder="tu@email.com"
+                  disabled={isSubmitting}
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditModalOpen(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+                  Guardar cambios
+                </Button>
+              </div>
+            </form>
+          </TabsContent>
+          
+          <TabsContent value="password" className="space-y-4">
+            <form onSubmit={handlePasswordUpdate} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">Nueva contraseña</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  placeholder="••••••••"
+                  disabled={isSubmitting}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  placeholder="••••••••"
+                  disabled={isSubmitting}
+                  required
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditModalOpen(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+                  Actualizar contraseña
+                </Button>
+              </div>
+            </form>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
 
   // Fetch user's inventory
   const { data: inventory = [], isLoading: inventoryLoading } = useQuery({
@@ -144,9 +350,7 @@ const ProfilePage = () => {
                 </div>
                 <Separator />
                 <div className="pt-2">
-                  <Button variant="outline" className="w-full" disabled>
-                    Editar perfil
-                  </Button>
+                  <EditProfileModal />
                 </div>
               </CardContent>
             </Card>
