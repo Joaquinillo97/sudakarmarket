@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import AuthFormContainer from "@/components/auth/AuthFormContainer";
 import AuthFormHeader from "@/components/auth/AuthFormHeader";
 import AuthLoadingSpinner from "@/components/auth/AuthLoadingSpinner";
@@ -20,13 +21,38 @@ const AuthPage = () => {
 
   console.log("AuthPage rendered", { isAuthenticated, authLoading });
 
-  // Check for password reset in URL
+  // Check for password reset in URL hash (Supabase recovery flow)
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
+    const hashParams = new URLSearchParams(location.hash.substring(1));
+    
+    // Check for traditional reset parameter
     if (urlParams.get('reset') === 'true') {
       setFormType('password-reset');
     }
-  }, [location.search]);
+    
+    // Check for Supabase recovery tokens in hash
+    if (hashParams.get('type') === 'recovery' && hashParams.get('access_token')) {
+      console.log('Recovery tokens detected in URL hash');
+      setFormType('password-reset');
+      
+      // Process the recovery session automatically
+      const processRecoverySession = async () => {
+        try {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (error) {
+            console.error('Error getting recovery session:', error);
+          } else if (session) {
+            console.log('Recovery session established successfully');
+          }
+        } catch (error) {
+          console.error('Error processing recovery session:', error);
+        }
+      };
+      
+      processRecoverySession();
+    }
+  }, [location.search, location.hash]);
 
   // If we're already authenticated, redirect to the home page
   // or to the page the user was trying to access before authentication
