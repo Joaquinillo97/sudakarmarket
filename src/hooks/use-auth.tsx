@@ -21,6 +21,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
 }
 
 // Create the context with a default value
@@ -296,6 +297,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Update password
+  const updatePassword = async (newPassword: string) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (error) {
+        console.error("Password update error:", error.message);
+        toast.error("Error al actualizar la contraseña: " + error.message);
+        throw error;
+      }
+      
+      toast.success("Contraseña actualizada correctamente");
+    } catch (error: any) {
+      console.error("Password update error:", error);
+      toast.error("Error al actualizar la contraseña: " + (error.message || "Error desconocido"));
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -306,7 +331,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signUp,
         resetPassword,
         signOut,
-        updateProfile
+        updateProfile,
+        updatePassword
       }}
     >
       {children}

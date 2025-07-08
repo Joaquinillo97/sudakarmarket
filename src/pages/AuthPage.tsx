@@ -10,25 +10,37 @@ import { Loader } from "lucide-react";
 const AuthPage = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const { signIn, signUp, resetPassword, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { signIn, signUp, resetPassword, updatePassword, isAuthenticated, isLoading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
   console.log("AuthPage rendered", { isAuthenticated, authLoading });
+
+  // Check for password reset in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    if (urlParams.get('reset') === 'true') {
+      setIsPasswordReset(true);
+      setIsForgotPassword(false);
+      setIsSignUp(false);
+    }
+  }, [location.search]);
 
   // Check for redirect state
   useEffect(() => {
     // Reset states when form type changes
     setErrorMessage("");
     setSuccessMessage("");
-  }, [isSignUp, isForgotPassword]);
+  }, [isSignUp, isForgotPassword, isPasswordReset]);
 
   // If we're already authenticated, redirect to the home page
   // or to the page the user was trying to access before authentication
@@ -47,7 +59,20 @@ const AuthPage = () => {
     setIsSubmitting(true);
 
     try {
-      if (isForgotPassword) {
+      if (isPasswordReset) {
+        // Validate passwords match
+        if (password !== confirmPassword) {
+          throw new Error("Las contraseñas no coinciden");
+        }
+        if (password.length < 6) {
+          throw new Error("La contraseña debe tener al menos 6 caracteres");
+        }
+        await updatePassword(password);
+        setSuccessMessage("Contraseña actualizada exitosamente");
+        setTimeout(() => {
+          navigate("/", { replace: true });
+        }, 2000);
+      } else if (isForgotPassword) {
         await resetPassword(email);
         setSuccessMessage("Se ha enviado un correo para restablecer tu contraseña");
       } else if (isSignUp) {
@@ -71,6 +96,7 @@ const AuthPage = () => {
 
   const handleToggleForgotPassword = () => {
     setIsForgotPassword(!isForgotPassword);
+    setIsPasswordReset(false);
     setErrorMessage("");
     setSuccessMessage("");
   };
@@ -97,24 +123,28 @@ const AuthPage = () => {
       <div className="w-full max-w-md space-y-6 rounded-lg border border-border bg-card p-6 shadow-lg">
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold font-magic">
-            {isForgotPassword 
-              ? "Recuperar contraseña" 
-              : isSignUp 
-                ? "Crear cuenta" 
-                : "Iniciar sesión"}
+            {isPasswordReset
+              ? "Nueva contraseña"
+              : isForgotPassword 
+                ? "Recuperar contraseña" 
+                : isSignUp 
+                  ? "Crear cuenta" 
+                  : "Iniciar sesión"}
           </h1>
           <p className="text-muted-foreground">
-            {isForgotPassword
-              ? "Ingresa tu correo electrónico para recuperar tu contraseña"
-              : isSignUp
-                ? "Regístrate para acceder a todas las funcionalidades"
-                : "Ingresa tus credenciales para acceder a tu cuenta"}
+            {isPasswordReset
+              ? "Ingresa tu nueva contraseña"
+              : isForgotPassword
+                ? "Ingresa tu correo electrónico para recuperar tu contraseña"
+                : isSignUp
+                  ? "Regístrate para acceder a todas las funcionalidades"
+                  : "Ingresa tus credenciales para acceder a tu cuenta"}
           </p>
         </div>
 
         <div className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isForgotPassword && isSignUp && (
+            {!isForgotPassword && !isPasswordReset && isSignUp && (
               <div className="space-y-2">
                 <Label htmlFor="username">Nombre de usuario</Label>
                 <Input
@@ -127,22 +157,26 @@ const AuthPage = () => {
                 />
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Correo electrónico</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="tu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isSubmitting}
-                required
-              />
-            </div>
-            {!isForgotPassword && (
+            {!isPasswordReset && (
+              <div className="space-y-2">
+                <Label htmlFor="email">Correo electrónico</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="tu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isSubmitting}
+                  required
+                />
+              </div>
+            )}
+            {(!isForgotPassword || isPasswordReset) && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Contraseña</Label>
+                  <Label htmlFor="password">
+                    {isPasswordReset ? "Nueva contraseña" : "Contraseña"}
+                  </Label>
                 </div>
                 <Input
                   id="password"
@@ -150,6 +184,20 @@ const AuthPage = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={isSubmitting}
+                  required
+                />
+              </div>
+            )}
+            {isPasswordReset && (
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={isSubmitting}
                   required
                 />
@@ -171,16 +219,18 @@ const AuthPage = () => {
               aria-disabled={isSubmitting}
             >
               {isSubmitting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-              {isForgotPassword 
-                ? "Recuperar contraseña" 
-                : isSignUp 
-                  ? "Registrarme" 
-                  : "Iniciar sesión"}
+              {isPasswordReset
+                ? "Actualizar contraseña"
+                : isForgotPassword 
+                  ? "Recuperar contraseña" 
+                  : isSignUp 
+                    ? "Registrarme" 
+                    : "Iniciar sesión"}
             </Button>
           </form>
 
           <div className="text-center text-sm space-y-2">
-            {!isForgotPassword && (
+            {!isForgotPassword && !isPasswordReset && (
               <button
                 type="button"
                 className="text-sm text-mtg-orange hover:underline"
@@ -191,7 +241,18 @@ const AuthPage = () => {
               </button>
             )}
             
-            {isForgotPassword ? (
+            {isPasswordReset ? (
+              <p>
+                <button
+                  type="button"
+                  className="font-medium text-mtg-orange hover:underline"
+                  onClick={() => navigate("/auth")}
+                  disabled={isSubmitting}
+                >
+                  Volver al inicio de sesión
+                </button>
+              </p>
+            ) : isForgotPassword ? (
               <p>
                 <button
                   type="button"
