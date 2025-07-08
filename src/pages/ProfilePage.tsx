@@ -47,6 +47,8 @@ const ProfilePage = () => {
   useEffect(() => {
     const hashParams = new URLSearchParams(location.hash.substring(1));
     
+    console.log("Checking URL hash params:", Object.fromEntries(hashParams));
+    
     // Check for errors in the hash (expired tokens, etc.)
     const error = hashParams.get('error');
     const errorCode = hashParams.get('error_code');
@@ -61,14 +63,23 @@ const ProfilePage = () => {
     }
     
     // Check for Supabase recovery tokens in hash
-    if (hashParams.get('type') === 'recovery' && hashParams.get('access_token')) {
+    const recoveryType = hashParams.get('type');
+    const accessToken = hashParams.get('access_token');
+    
+    console.log("Recovery check:", { recoveryType, hasAccessToken: !!accessToken });
+    
+    if (recoveryType === 'recovery' && accessToken) {
       console.log('Recovery tokens detected, processing...');
       setIsProcessingRecovery(true);
       
       // Process the recovery session automatically
       const processRecoverySession = async () => {
         try {
+          // First, try to get the session which should be established by Supabase
           const { data: { session }, error } = await supabase.auth.getSession();
+          
+          console.log("Session check:", { hasSession: !!session, error });
+          
           if (error) {
             console.error('Error getting recovery session:', error);
             toast({
@@ -78,15 +89,39 @@ const ProfilePage = () => {
             });
           } else if (session) {
             console.log('Recovery session established successfully');
-            // Open modal with password tab after a small delay
-            setTimeout(() => {
-              setIsEditModalOpen(true);
-              setEditTab("password");
-              toast({
-                title: "Listo para cambiar contraseña",
-                description: "Ahora puedes establecer tu nueva contraseña.",
-              });
-            }, 1000);
+            // Open modal with password tab immediately
+            setIsEditModalOpen(true);
+            setEditTab("password");
+            toast({
+              title: "Cambiar contraseña",
+              description: "Ingresa tu nueva contraseña para completar la recuperación.",
+            });
+          } else {
+            console.log('No session found, trying to establish one...');
+            // If no session, the tokens might need to be processed
+            toast({
+              title: "Procesando...",
+              description: "Estableciendo sesión de recuperación...",
+            });
+            
+            // Wait a bit and try again
+            setTimeout(async () => {
+              const { data: { session: retrySession } } = await supabase.auth.getSession();
+              if (retrySession) {
+                setIsEditModalOpen(true);
+                setEditTab("password");
+                toast({
+                  title: "Cambiar contraseña",
+                  description: "Ingresa tu nueva contraseña para completar la recuperación.",
+                });
+              } else {
+                toast({
+                  title: "Error",
+                  description: "No se pudo establecer la sesión de recuperación.",
+                  variant: "destructive",
+                });
+              }
+            }, 2000);
           }
         } catch (error) {
           console.error('Error processing recovery session:', error);

@@ -45,24 +45,29 @@ const AuthPage = () => {
     
     // Check for Supabase recovery tokens in hash
     if (hashParams.get('type') === 'recovery' && hashParams.get('access_token')) {
-      console.log('Recovery tokens detected in URL hash');
-      setFormType('password-reset');
+      console.log('Recovery tokens detected in URL hash - redirecting to profile');
       
-      // Process the recovery session automatically
-      const processRecoverySession = async () => {
+      // For recovery, redirect to profile page instead of showing reset form here
+      const processRecoveryAndRedirect = async () => {
         try {
           const { data: { session }, error } = await supabase.auth.getSession();
           if (error) {
             console.error('Error getting recovery session:', error);
+            // Still show the password reset form as fallback
+            setFormType('password-reset');
           } else if (session) {
-            console.log('Recovery session established successfully');
+            console.log('Recovery session established, redirecting to profile');
+            // Redirect to profile page which will handle the password change
+            navigate('/profile' + location.hash, { replace: true });
+            return;
           }
         } catch (error) {
           console.error('Error processing recovery session:', error);
+          setFormType('password-reset');
         }
       };
       
-      processRecoverySession();
+      processRecoveryAndRedirect();
     }
   }, [location.search, location.hash]);
 
