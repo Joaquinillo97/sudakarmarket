@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useLocation } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { TabsContent, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,6 +24,7 @@ const ProfilePage = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editTab, setEditTab] = useState("profile");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isProcessingRecovery, setIsProcessingRecovery] = useState(false);
   
   // Profile form state
   const [profileForm, setProfileForm] = useState({
@@ -39,6 +41,68 @@ const ProfilePage = () => {
 
   const { user, isAuthenticated, isLoading: authLoading, updateProfile, updatePassword } = useAuth();
   const { toast } = useToast();
+  const location = useLocation();
+
+  // Check for password recovery tokens in URL
+  useEffect(() => {
+    const hashParams = new URLSearchParams(location.hash.substring(1));
+    
+    // Check for errors in the hash (expired tokens, etc.)
+    const error = hashParams.get('error');
+    const errorCode = hashParams.get('error_code');
+    
+    if (error && errorCode === 'otp_expired') {
+      toast({
+        title: "Enlace expirado",
+        description: "El enlace de recuperación ha expirado. Solicita uno nuevo.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check for Supabase recovery tokens in hash
+    if (hashParams.get('type') === 'recovery' && hashParams.get('access_token')) {
+      console.log('Recovery tokens detected, processing...');
+      setIsProcessingRecovery(true);
+      
+      // Process the recovery session automatically
+      const processRecoverySession = async () => {
+        try {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (error) {
+            console.error('Error getting recovery session:', error);
+            toast({
+              title: "Error de recuperación",
+              description: "No se pudo procesar el enlace de recuperación.",
+              variant: "destructive",
+            });
+          } else if (session) {
+            console.log('Recovery session established successfully');
+            // Open modal with password tab after a small delay
+            setTimeout(() => {
+              setIsEditModalOpen(true);
+              setEditTab("password");
+              toast({
+                title: "Listo para cambiar contraseña",
+                description: "Ahora puedes establecer tu nueva contraseña.",
+              });
+            }, 1000);
+          }
+        } catch (error) {
+          console.error('Error processing recovery session:', error);
+          toast({
+            title: "Error",
+            description: "Ocurrió un error al procesar la recuperación.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsProcessingRecovery(false);
+        }
+      };
+      
+      processRecoverySession();
+    }
+  }, [location.hash, toast]);
 
   // Update profile form when user data changes
   useEffect(() => {
@@ -289,12 +353,15 @@ const ProfilePage = () => {
     enabled: !!user?.id && isAuthenticated
   });
 
-  if (authLoading) {
+  if (authLoading || isProcessingRecovery) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
-          <p>Cargando...</p>
+          <div className="text-center">
+            <Loader className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p>{isProcessingRecovery ? "Procesando recuperación..." : "Cargando..."}</p>
+          </div>
         </main>
         <Footer />
       </div>
