@@ -11,6 +11,7 @@ import CardDetailsPage from "./pages/CardDetailsPage";
 import WishlistPage from "./pages/WishlistPage";
 import SellersPage from "./pages/SellersPage";
 import AuthPage from "./pages/AuthPage";
+import PasswordChangePage from "./pages/PasswordChangePage";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
@@ -34,6 +35,7 @@ const App = () => (
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/wishlist" element={<WishlistPage />} />
+              <Route path="/password-change" element={<PasswordChangePage />} />
               <Route path="/collection" element={<Navigate to="/wishlist" />} />
               <Route path="/profile" element={<Navigate to="/wishlist" />} />
               <Route path="/import" element={<Navigate to="/wishlist" />} />

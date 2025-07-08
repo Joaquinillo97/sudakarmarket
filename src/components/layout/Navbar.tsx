@@ -109,6 +109,9 @@ const Navbar = () => {
                   <Link to="/wishlist" className="w-full">Mi wishlist</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
+                  <Link to="/password-change" className="w-full">Cambiar contraseña</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
                   <Link to="/messages" className="w-full">Mensajes</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
