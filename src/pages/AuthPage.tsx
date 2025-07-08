@@ -31,6 +31,18 @@ const AuthPage = () => {
       setFormType('password-reset');
     }
     
+    // Check for errors in the hash (expired tokens, etc.)
+    const error = hashParams.get('error');
+    const errorCode = hashParams.get('error_code');
+    const errorDescription = hashParams.get('error_description');
+    
+    if (error && errorCode === 'otp_expired') {
+      console.log('Password reset token expired');
+      setFormType('forgot-password');
+      // Could show a toast message here about expired token
+      return;
+    }
+    
     // Check for Supabase recovery tokens in hash
     if (hashParams.get('type') === 'recovery' && hashParams.get('access_token')) {
       console.log('Recovery tokens detected in URL hash');
