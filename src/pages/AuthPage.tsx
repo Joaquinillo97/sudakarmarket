@@ -56,9 +56,9 @@ const AuthPage = () => {
             // Still show the password reset form as fallback
             setFormType('password-reset');
           } else if (session) {
-            console.log('Recovery session established, redirecting to profile');
-            // Redirect to profile page which will handle the password change
-            navigate('/profile' + location.hash, { replace: true });
+        console.log('Recovery session established, redirecting to password change');
+        // Redirect to password change page which will handle the password change
+        navigate('/password-change' + location.hash, { replace: true });
             return;
           }
         } catch (error) {
