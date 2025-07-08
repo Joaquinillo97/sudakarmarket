@@ -1,25 +1,20 @@
-
 import { useState, useEffect } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader } from "lucide-react";
+import AuthFormContainer from "@/components/auth/AuthFormContainer";
+import AuthFormHeader from "@/components/auth/AuthFormHeader";
+import AuthLoadingSpinner from "@/components/auth/AuthLoadingSpinner";
+import LoginForm from "@/components/auth/LoginForm";
+import SignUpForm from "@/components/auth/SignUpForm";
+import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
+import PasswordResetForm from "@/components/auth/PasswordResetForm";
+
+type AuthFormType = 'login' | 'signup' | 'forgot-password' | 'password-reset';
 
 const AuthPage = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [isForgotPassword, setIsForgotPassword] = useState(false);
-  const [isPasswordReset, setIsPasswordReset] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [username, setUsername] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [formType, setFormType] = useState<AuthFormType>('login');
 
-  const { signIn, signUp, resetPassword, updatePassword, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -29,18 +24,9 @@ const AuthPage = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     if (urlParams.get('reset') === 'true') {
-      setIsPasswordReset(true);
-      setIsForgotPassword(false);
-      setIsSignUp(false);
+      setFormType('password-reset');
     }
   }, [location.search]);
-
-  // Check for redirect state
-  useEffect(() => {
-    // Reset states when form type changes
-    setErrorMessage("");
-    setSuccessMessage("");
-  }, [isSignUp, isForgotPassword, isPasswordReset]);
 
   // If we're already authenticated, redirect to the home page
   // or to the page the user was trying to access before authentication
@@ -52,65 +38,9 @@ const AuthPage = () => {
     }
   }, [isAuthenticated, location.state, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
-    setIsSubmitting(true);
-
-    try {
-      if (isPasswordReset) {
-        // Validate passwords match
-        if (password !== confirmPassword) {
-          throw new Error("Las contraseñas no coinciden");
-        }
-        if (password.length < 6) {
-          throw new Error("La contraseña debe tener al menos 6 caracteres");
-        }
-        await updatePassword(password);
-        setSuccessMessage("Contraseña actualizada exitosamente");
-        setTimeout(() => {
-          navigate("/", { replace: true });
-        }, 2000);
-      } else if (isForgotPassword) {
-        await resetPassword(email);
-        setSuccessMessage("Se ha enviado un correo para restablecer tu contraseña");
-      } else if (isSignUp) {
-        // Validate username
-        if (!username.trim()) {
-          throw new Error("El nombre de usuario es requerido");
-        }
-        await signUp(email, password, username);
-        setIsSignUp(false); // Switch to login form after successful signup
-      } else {
-        await signIn(email, password);
-        // Don't need to navigate here - the auth state change will trigger a redirect
-      }
-    } catch (error: any) {
-      const errorMsg = error.message || "Ocurrió un error durante la autenticación";
-      setErrorMessage(errorMsg);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleToggleForgotPassword = () => {
-    setIsForgotPassword(!isForgotPassword);
-    setIsPasswordReset(false);
-    setErrorMessage("");
-    setSuccessMessage("");
-  };
-
   // Show a global loading state if the auth system is still initializing
   if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader className="h-10 w-10 animate-spin text-mtg-orange" />
-          <p className="text-lg">Cargando...</p>
-        </div>
-      </div>
-    );
+    return <AuthLoadingSpinner />;
   }
 
   // If we're already authenticated but still on this page, redirect
@@ -118,180 +48,65 @@ const AuthPage = () => {
     return null; // Return null while the useEffect handles redirection
   }
 
+  // Get form title and description based on current form type
+  const getFormContent = () => {
+    switch (formType) {
+      case 'signup':
+        return {
+          title: "Crear cuenta",
+          description: "Regístrate para acceder a todas las funcionalidades"
+        };
+      case 'forgot-password':
+        return {
+          title: "Recuperar contraseña",
+          description: "Ingresa tu correo electrónico para recuperar tu contraseña"
+        };
+      case 'password-reset':
+        return {
+          title: "Nueva contraseña",
+          description: "Ingresa tu nueva contraseña"
+        };
+      default:
+        return {
+          title: "Iniciar sesión",
+          description: "Ingresa tus credenciales para acceder a tu cuenta"
+        };
+    }
+  };
+
+  const renderForm = () => {
+    switch (formType) {
+      case 'signup':
+        return (
+          <SignUpForm 
+            onSwitchToLogin={() => setFormType('login')}
+          />
+        );
+      case 'forgot-password':
+        return (
+          <ForgotPasswordForm 
+            onBackToLogin={() => setFormType('login')}
+          />
+        );
+      case 'password-reset':
+        return <PasswordResetForm />;
+      default:
+        return (
+          <LoginForm 
+            onSwitchToSignUp={() => setFormType('signup')}
+            onSwitchToForgotPassword={() => setFormType('forgot-password')}
+          />
+        );
+    }
+  };
+
+  const { title, description } = getFormContent();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-md space-y-6 rounded-lg border border-border bg-card p-6 shadow-lg">
-        <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold font-magic">
-            {isPasswordReset
-              ? "Nueva contraseña"
-              : isForgotPassword 
-                ? "Recuperar contraseña" 
-                : isSignUp 
-                  ? "Crear cuenta" 
-                  : "Iniciar sesión"}
-          </h1>
-          <p className="text-muted-foreground">
-            {isPasswordReset
-              ? "Ingresa tu nueva contraseña"
-              : isForgotPassword
-                ? "Ingresa tu correo electrónico para recuperar tu contraseña"
-                : isSignUp
-                  ? "Regístrate para acceder a todas las funcionalidades"
-                  : "Ingresa tus credenciales para acceder a tu cuenta"}
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isForgotPassword && !isPasswordReset && isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="username">Nombre de usuario</Label>
-                <Input
-                  id="username"
-                  placeholder="Nombre de usuario"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  disabled={isSubmitting}
-                  required
-                />
-              </div>
-            )}
-            {!isPasswordReset && (
-              <div className="space-y-2">
-                <Label htmlFor="email">Correo electrónico</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isSubmitting}
-                  required
-                />
-              </div>
-            )}
-            {(!isForgotPassword || isPasswordReset) && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">
-                    {isPasswordReset ? "Nueva contraseña" : "Contraseña"}
-                  </Label>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isSubmitting}
-                  required
-                />
-              </div>
-            )}
-            {isPasswordReset && (
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={isSubmitting}
-                  required
-                />
-              </div>
-            )}
-
-            {errorMessage && (
-              <div className="text-sm text-red-500">{errorMessage}</div>
-            )}
-
-            {successMessage && (
-              <div className="text-sm text-green-500">{successMessage}</div>
-            )}
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting}
-              aria-disabled={isSubmitting}
-            >
-              {isSubmitting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-              {isPasswordReset
-                ? "Actualizar contraseña"
-                : isForgotPassword 
-                  ? "Recuperar contraseña" 
-                  : isSignUp 
-                    ? "Registrarme" 
-                    : "Iniciar sesión"}
-            </Button>
-          </form>
-
-          <div className="text-center text-sm space-y-2">
-            {!isForgotPassword && !isPasswordReset && (
-              <button
-                type="button"
-                className="text-sm text-mtg-orange hover:underline"
-                onClick={handleToggleForgotPassword}
-                disabled={isSubmitting}
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
-            )}
-            
-            {isPasswordReset ? (
-              <p>
-                <button
-                  type="button"
-                  className="font-medium text-mtg-orange hover:underline"
-                  onClick={() => navigate("/auth")}
-                  disabled={isSubmitting}
-                >
-                  Volver al inicio de sesión
-                </button>
-              </p>
-            ) : isForgotPassword ? (
-              <p>
-                <button
-                  type="button"
-                  className="font-medium text-mtg-orange hover:underline"
-                  onClick={handleToggleForgotPassword}
-                  disabled={isSubmitting}
-                >
-                  Volver al inicio de sesión
-                </button>
-              </p>
-            ) : isSignUp ? (
-              <p>
-                ¿Ya tienes una cuenta?{" "}
-                <button
-                  type="button"
-                  className="font-medium text-mtg-orange hover:underline"
-                  onClick={() => setIsSignUp(false)}
-                  disabled={isSubmitting}
-                >
-                  Iniciar sesión
-                </button>
-              </p>
-            ) : (
-              <p>
-                ¿No tienes una cuenta?{" "}
-                <button
-                  type="button"
-                  className="font-medium text-mtg-orange hover:underline"
-                  onClick={() => setIsSignUp(true)}
-                  disabled={isSubmitting}
-                >
-                  Registrarme
-                </button>
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+    <AuthFormContainer>
+      <AuthFormHeader title={title} description={description} />
+      {renderForm()}
+    </AuthFormContainer>
   );
 };
 
